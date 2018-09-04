@@ -1,5 +1,5 @@
 window.onload=function(){ //entry point
-  intext.value="(0,0,0)(1,1,1)(2,0,0)(0,0,0)[3]";  
+  intext.value="(0,0,0)(1,1,1)(2,0,0)(1,1,1)[3]";  
 }
 var dothemall=function(){ //button
   var str=intext.value;
@@ -10,14 +10,7 @@ var dothemall=function(){ //button
   //parse
   var s=Bms.parse(str);
   //test
-  var pm=new Array(s.xs());
-  for(var x=0;x<s.xs();x++){
-    pm[x]=new Array(s.ys());
-    for(var y=0;y<s.ys();y++){
-      pm[x][y]=s.getParent(x,y);
-    }
-  }
-  outtext.value = pm.toString();
+  outtext.value = s.getAscension().toString();
 };
 
 var ctx     = outcanvas.getContext('2d');
