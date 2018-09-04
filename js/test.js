@@ -1,27 +1,35 @@
+window.onload=function(){ //entry point
+  intext.value="(0,0,0)(1,1,1)(2,0,0)(0,0,0)[3]";  
+}
+var dothemall=function(){ //button
+  var str=intext.value;
+  //trimming \n
+  str=str.replace(/^\n*/g, "");
+  str=str.replace(/\n*$/g, "");
+  str=str.replace(/\n+/g, "\n");
+  //parse
+  var s=Bms.parse(str);
+  //test
+  var pm=new Array(s.xs());
+  for(var x=0;x<s.xs();x++){
+    pm[x]=new Array(s.ys());
+    for(var y=0;y<s.ys();y++){
+      pm[x][y]=s.getParent(x,y);
+    }
+  }
+  outtext.value = pm.toString();
+};
+
 var ctx     = outcanvas.getContext('2d');
 var items;
 var allsum;
 var allmax;
 var allmin;
-var dothemall=function(){
-  //parse
-  var str=intext.value;
-  str=str.replace(/^\n*/g, "");
-  str=str.replace(/\n*$/g, "");
-  str=str.replace(/\n+/g, "\n");
-  var s=Bms.parse(str);
-  outtext.value = s.toString();
-//  var mm=Bms.multiparse(str);
-//  // draw
-//  usedsize=drawTree(mm);
-//  outImg();
-};
-
 
 var drawtype = "pair sequence hydra";
 var psh=new function(){};
 psh.radius     = 10;
-psh.colshift   = psh.radius*3;
+psh.xshift   = psh.radius*3;
 psh.levelshift = psh.radius*2;
 psh.marginsall = [[10,10],[10,10]]; //[[L,R],[Top,Bottom]]
 psh.marginmatrices = 0;
@@ -36,7 +44,7 @@ var drawTree=function(mm){
       var maxcols = 0;
       for(mmi=0;mmi<matrices;mmi++){
         var m=mm[mmi];
-        maxcols  = Math.max(maxcols, m.cols());
+        maxcols  = Math.max(maxcols, m.xs());
       }
       var upperbound=new Array(matrices);
       var lowerbound=new Array(matrices);
@@ -46,7 +54,7 @@ var drawTree=function(mm){
         lowerbound[mmi]=new Array(maxcols);
         for(x=0;x<maxcols;x++){
           upperbound[mmi][x]=1;
-          if(x<m.cols()){
+          if(x<m.xs()){
             lowerbound[mmi][x]=m.s[x][0];
           }else{
             lowerbound[mmi][x]=+Infinity;
@@ -55,7 +63,7 @@ var drawTree=function(mm){
       }
       for(mmi=0;mmi<matrices;mmi++){
         var m=mm[mmi];
-        for(cx=0;cx<m.cols();cx++){
+        for(cx=0;cx<m.xs();cx++){
           upperbound[mmi][cx] = m.s[cx][0]+1; //length of root to child
           var px = m.findParent(cx);
           if(px>=0){
@@ -98,7 +106,7 @@ var drawTree=function(mm){
         rooty_pixel[mmi] += mmi*psh.marginmatrices;
       }
       // decide use size
-      usedsize[0]  = (maxcols+1)*psh.colshift + psh.radius*2;
+      usedsize[0]  = (maxcols+1)*psh.xshift + psh.radius*2;
       usedsize[0] += psh.marginsall[0][0];
       usedsize[0] += psh.marginsall[0][1];
       
@@ -123,9 +131,9 @@ var drawTree=function(mm){
         textheight = psh.fontsize;
         ctx.fillText(text,rootx_pixel-textwidth/2,rooty_pixel[mmi]+textheight/2*0.7);
         //draw columns
-        for(ci=0;ci<m.cols();ci++){
+        for(ci=0;ci<m.xs();ci++){
           var level  = m.s[ci][0];
-          var cx     = rootx_pixel     +(ci   +1)*psh.colshift;
+          var cx     = rootx_pixel     +(ci   +1)*psh.xshift;
           var cy     = rooty_pixel[mmi]-(level+1)*psh.levelshift;
           
           // stroke circle
@@ -143,7 +151,7 @@ var drawTree=function(mm){
           // stroke branch
           var branchr = psh.levelshift-psh.radius; // radius of branch
           var pi      = m.findParent(ci);     // parent
-          var px     = rootx_pixel+(pi      +1)*psh.colshift;
+          var px     = rootx_pixel+(pi      +1)*psh.xshift;
           var py;
           if(pi>=0){
               py     = rooty_pixel[mmi]-(m.s[pi][0]+1)*psh.levelshift;

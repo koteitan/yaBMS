@@ -9,8 +9,8 @@ The original bashicu matrix system was implemented in BASIC language. In this re
 - extendable with libraries
 
 - contents
-  - python/yaBMS.py ... python (under construction)
-  - js/bms.js ....... JavaScript library (under construction)
-    - js/index.html ... test page
-    - js/yaBMS.js ..... test code
+  - python/yaBMS.py: python (under construction)
+  - js/bms.js: JavaScript library (under construction)
+    - js/index.html: test page
+    - js/test.js: test code
 

@@ -5,31 +5,66 @@ var Bms=function(_s,_b){
     this.s=_s;
     if(!isNaN(_b)) this.b=_b;
 };
-/* m.findParent(ci) returns index of parent of ci.
-   It returns -1 when the parent of ci cannot be found. */
-Bms.prototype.findParent=function(ci){
-  if(ci===undefined)ci=this.length()-1;
-  for(var c=ci-1;c>=0;c--){
-    if(this.s[c][0]==this.s[ci][0]-1){
-      return c;
+/* bms.getLowermostNonzero(c) returns row index of the lowermost nonzero element of c. 
+   if lowermost nonzero element of c is not found, it returns -1.*/
+Bms.prototype.getLowermostNonzero=function(c){
+  var y;
+  for(y=c.length-1;y>=0;y--){
+    if(c[y]>0) break;
+  }
+  return y;
+}
+/* bms.findParent(x,y) returns column index of parent of (x,y).
+   bms.findParent() returns bad root of bms.
+   It returns -1 when the parent of (x,y) cannot be found. */
+Bms.prototype.getParent=function(x,y){
+  if(x===undefined){ /* if no parameters */
+    x=this.xs()-1; /* x = rightmost column */
+    y=this.getLowermostNonzero(this.s[x]);
+    if(y<0) return null;
+  }
+  
+  var xp=x; /* parent candidate */
+  while(xp>0){
+    /* xp = next */
+    if(y!=0){
+      xp=this.getParent(xp,y-1); /* try column of upper parent */
+    }else{
+      xp=xp-1; /* simply left */
+    }
+    if(xp==-1)return xp; /* parent is not found */
+    if(this.s[xp][y]<this.s[x][y]){ /* judge smaller */
+      return xp;
     }
   }
   return -1;
 }
-Bms.prototype.cols=function(){
+/* m.getAscension() returns ascension matrix A[x][y]. 
+   A[x][y]==0 (x,y) is not ascended in copy
+   A[x][y]==1 (x,y) is ascended in copy
+*/
+Bms.prototype.getAscension=function(){
+  var A=new Array(this.xs());
+  for(var x=0;x<this.xs();x++){
+    A[x]=new Array(this.ys());
+  }
+  for(var y=0;y<this.ys();y++){
+  }
+}
+Bms.prototype.xs=function(){
   return this.s.length;
 }
-Bms.prototype.rows=function(){
+Bms.prototype.ys=function(){
   return this.s[0].length;
 }
 /* convert to string */
 Bms.prototype.toString=function(){
   var str="";
-  for(var c=0;c<this.cols();c++){
+  for(var c=0;c<this.xs();c++){
     str+="(";
-    for(var r=0;r<this.rows();r++){
+    for(var r=0;r<this.ys();r++){
       str += this.s[c][r];
-      if(r!=this.rows()-1)str += ",";
+      if(r!=this.ys()-1)str += ",";
     }
     str+=")";
   }
