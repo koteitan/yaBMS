@@ -9,3 +9,9 @@ The original bashicu matrix system was implemented in BASIC language. In this re
 - understood more easily or
 - more fast for your experiment
 - extendable with libraries
+
+- contents
+  - bms.py ... python (under construction)
+  - bms.js ... JavaScript
+
+  
