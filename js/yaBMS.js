@@ -9,10 +9,12 @@ var dothemall=function(){
   str=str.replace(/^\n*/g, "");
   str=str.replace(/\n*$/g, "");
   str=str.replace(/\n+/g, "\n");
-  var mm=Bms.multiparse(str);
-  // draw
-  usedsize=drawTree(mm);
-  outImg();
+  var s=Bms.parse(str);
+  outtext.value = s.toString();
+//  var mm=Bms.multiparse(str);
+//  // draw
+//  usedsize=drawTree(mm);
+//  outImg();
 };
 
 
