@@ -2,14 +2,53 @@
   Bashicu Matrix
   in: _s[c][r] = matrix, c=column index, r=row index 
   in: _b = bracket */
-var Bms=function(_s,_b){
-    this.s=_s;
-    if(!isNaN(_b)) this.b=_b;
+var Bms=function(_s,_b,_f){
+  this.s=_s;
+  if(!isNaN(_b)) this.b=_b;
+  this.f=_f;
+};
+/* ---------------------------------------------------------
+  bms.incBracket() returns inclemented bracket */
+Bms.prototype.incBracket=function(){
+  if(!(this.f === undefined)){
+    return this.f(b);
+  }else{
+    return this.b;
+  }
 };
 /* ---------------------------------------------------------
   bms.expand() returns one step expanded matrix from bms */
 Bms.prototype.expand=function(){
+  var s=this.s;
+  var xs=this.xs();
+  var ys=this.ys();
+  
+  /* inclement bracket */
+  var b1 = this.incBracket();
+  var s1 = s.slice(0,xs-1); /* pop rightmost column */
+  
+  /* get bad root */
   var r=this.getBadRoot();
+  if(r==-1) return new Bms(s1,b1,this.f); 
+  /* delta = s[rightmost]-s[bad root] */
+  var delta=sub(s[xs-1], s[r]);
+  var lmnz=this.getLowermostNonzero(s[xs-1]); /* lowermost nonzero */
+  for(var y=lmnz;y<ys;y++) delta[y]=0; /* */
+  /* create new matrix -> s1 */
+  var A=this.getAscension(); /* get ascension matrix */
+  var bs=xs-r-1; /* number of columns of the bad parts */
+  
+  /* copy and ascension */
+  for(var i=0;i<this.b;i++){
+    for(var x=0;x<bs;x++){
+      var da=new Array(ys);
+      for(var y=0;y<ys;y++){
+        da[y]=s[r+x][y]+delta[y]*A[x][y]*(i+1);
+      }
+      s1.push(da);
+    }
+  }
+  return new Bms(s1,b1,this.f);
 };
 /* ---------------------------------------------------------
   bms.findParent(x,y) returns column index of parent of (x,y).
@@ -38,21 +77,26 @@ Bms.prototype.getBadRoot=function(){
   var x=this.xs()-1;
   /* y = Lowermost Nonzero row of x */
   var y=this.getLowermostNonzero(this.s[x]);
+  if(y==-1)return -1;
   return this.getParent(x,y);
 }
 /* ---------------------------------------------------------
   bms.getAscension() returns ascension matrix A[x][y] of bms. 
-   A[x][y]==0 (x,y) is not ascended in copy
-   A[x][y]==1 (x,y) is ascended in copy
+   A[x][y]==0 (x+r,y) is not ascended in copy
+   A[x][y]==1 (x+r,y) is ascended in copy
+   r=column index of the bad root
 */
 Bms.prototype.getAscension=function(){
-  var A = Array.zeros([this.xs(), this.ys()]); /* init */
+  var xs=this.xs();
+  var ys=this.ys();
   var r = this.getBadRoot(); /* bad root */
-  if(r==-1) return A; /* bad root is not found -> all zero */
-  for(var y=0;y<this.ys();y++){
-    A[r][y]=1; /* bad root is ascended */
-    for(var x=1;x<this.xs();x++){
-      var p=this.getParent(x,y);
+  if(r==-1) return []; /* bad root is not found -> empty */
+  var bs = xs-r-1; /* number of columns of the bad part */
+  var A = Array.zeros([bs, ys]); /* init */
+  for(var y=0;y<ys;y++){
+    A[0][y]=1; /* bad root is ascended */
+    for(var x=1;x<bs;x++){
+      var p=this.getParent(x+r,y);
       if(p!=-1 && A[p][y]==1) A[x][y]=1; /* propagate from parent */
     }
   }

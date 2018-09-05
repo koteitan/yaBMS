@@ -8,8 +8,8 @@ var dothemall=function(){ //button
   str=str.replace(/\n*$/g, "");
   str=str.replace(/\n+/g, "\n");
   //parse
-  var s=Bms.parse(str);
+  var bms=Bms.parse(str);
   //test
-  outtext.value = s.getAscension().toString();
+  outtext.value = bms.expand().toString();
 };
 
