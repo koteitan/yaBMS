@@ -95,9 +95,9 @@ Bms.prototype.getAscension=function(){
   var A = Array.zeros([bs, ys]); /* init */
   for(var y=0;y<ys;y++){
     A[0][y]=1; /* bad root is ascended */
-    for(var x=1;x<bs;x++){
+    for(var x=1;x<bs;x++){ /* x=column index of bad part */
       var p=this.getParent(x+r,y);
-      if(p!=-1 && A[p][y]==1) A[x][y]=1; /* propagate from parent */
+      if(p!=-1 && A[p-r][y]==1) A[x][y]=1; /* propagate from parent */
     }
   }
   return A;
