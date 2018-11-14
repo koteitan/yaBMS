@@ -3,9 +3,14 @@
   in: _s[c][r] = matrix, c=column index, r=row index 
   in: _b = bracket */
 var Bms=function(_s,_b,_f){
-  this.s=_s;
-  if(!isNaN(_b)) this.b=_b;
-  this.f=_f;
+  if(typeof(_s)=="string"){
+    var b=Bms.parse(_s);
+    this.s=b.s;
+  }else{
+    this.s=_s;
+    if(!isNaN(_b)) this.b=_b;
+    this.f=_f;
+  }
 };
 /* ---------------------------------------------------------
   bms.incBracket() returns inclemented bracket */
@@ -182,4 +187,11 @@ Bms.parse=function(str){
   }else{
     return new Bms(s,b);
   }
+}
+
+Bms.prototype.Lng=function(){
+  return this.xs();
+}
+Bms.Lng=function(M){
+  return M.xs();
 }
