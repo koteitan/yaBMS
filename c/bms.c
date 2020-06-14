@@ -35,7 +35,7 @@ Bm *parse(char *str){
   bm->xs=0;
   bm->ys=-1;
   int ys = 0;
-  Int *wp = &bm->m[0];
+  int *wp = &bm->m[0];
   char *c;
   //parse matrix
   for(c=&str[0];*c!='['&&*c!='\0';c++){
@@ -81,7 +81,7 @@ Bm *parse(char *str){
 }
 Bm* initbm(void){
   Bm *bm=malloc(sizeof(Bm));
-  bm->m = malloc(sizeof(Int)*BM_ELEMS_MAX);
+  bm->m = malloc(sizeof(int)*BM_ELEMS_MAX);
   return bm;
 }
 Bm* expand(Bm* bm0){
@@ -89,8 +89,8 @@ Bm* expand(Bm* bm0){
   Bm *bm1=initbm();
   int xs=bm0->xs;
   int ys=bm0->ys;
-  Int *m=bm0->m;
-  Int b =bm0->b;
+  int *m=bm0->m;
+  int b =bm0->b;
   int *p=&m[(xs-1)*ys];
 
   /* find lowermost non zero */
@@ -101,7 +101,7 @@ Bm* expand(Bm* bm0){
 
   /* simple cut case */
   if(y==0){ /* child=(0,...,0)  */
-    memcpy(bm1->m, bm0->m, sizeof(Int)*(xs-1)*ys);
+    memcpy(bm1->m, bm0->m, sizeof(int)*(xs-1)*ys);
     bm1->xs=xs-1;
     bm1->ys=ys;
     bm1->b=b;
@@ -111,7 +111,7 @@ Bm* expand(Bm* bm0){
   int *pim=malloc(sizeof(int)*xs*ys); /* parent index matrix  */
   for(y=0;y<ys;y++){
     for(x=0;x<xs;x++){
-      Int c=m[x*ys+y];
+      int c=m[x*ys+y];
       if(c==0){
         pim[x*ys+y]=-1;
         continue;
@@ -135,15 +135,15 @@ Bm* expand(Bm* bm0){
   int bpxs = xs-r-1; /* number of columns of bad part */
 
   /* make delta */
-  Int *delta=malloc(sizeof(Int)*lnz); /* delta[y] = ascension height of row y */
+  int *delta=malloc(sizeof(int)*lnz); /* delta[y] = ascension height of row y */
   for(y=0;y<lnz;y++){
     delta[y]=m[(xs-1)*ys+y]-m[r*ys+y];
   }
   
   /* make ascension matrix */ 
-  Int *am=malloc(sizeof(Int)*bpxs*lnz); /* am[x*ys+y]=0:not ascend/1:ascend */
-  memset(am,0,sizeof(Int)*bpxs*lnz);
-  Int *wp=&am[0];
+  int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*ys+y]=0:not ascend/1:ascend */
+  memset(am,0,sizeof(int)*bpxs*lnz);
+  int *wp=&am[0];
   for(y=0;y<lnz;y++) *wp++=1;
   for(x=1;x<bpxs;x++){
     for(y=0;y<lnz;y++){
@@ -156,15 +156,15 @@ Bm* expand(Bm* bm0){
   }
 
   /* copy good part+first bad part */
-  memcpy(bm1->m,m,sizeof(Int)*(xs-1)*ys);
+  memcpy(bm1->m,m,sizeof(int)*(xs-1)*ys);
   
   /* copy new bad part */
-  Int *rp  =&bm1->m[ r    *ys];
+  int *rp  =&bm1->m[ r    *ys];
        wp  =&bm1->m[(xs-1)*ys];
   for(int a=0;a<b;a++){ /* copy b times */
-    Int *rpam=&am[0];
+    int *rpam=&am[0];
     for(x=0;x<bpxs;x++){
-      Int *pd=&delta[0];
+      int *pd=&delta[0];
       for(y=0;y<lnz;y++){
         *wp++=*rp++ + (*rpam++)*(*pd++);
       }
