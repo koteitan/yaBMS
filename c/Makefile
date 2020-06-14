@@ -1,4 +1,4 @@
-.PHONY: all clean test
+.PHONY: all clean test doc
 CFLAGS = -O0 -g
 all: bms
 
@@ -10,4 +10,7 @@ test: bms
 
 clean:
 	rm -f bms
+
+doc: Doxyfile bms.c bms.h
+	doxygen Doxyfile
 
