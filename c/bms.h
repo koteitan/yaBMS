@@ -7,5 +7,5 @@ typedef struct{
   Int b;
 }Bm;
 
-int parse(Bm *bm, char *str);
+Bm* parse(char *str);
 void printbm(Bm *bm);

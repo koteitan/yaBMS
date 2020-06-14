@@ -3,11 +3,9 @@
 #include <string.h>
 #include <error.h>
 #include "bms.h"
-#define BM_XS_MAX 32
+#define BM_ELEMS_MAX 256
 int main(int argc, char **argv){
-  Bm *bm=malloc(sizeof(Bm));
-  bm->m=malloc(sizeof(Int)*BM_XS_MAX);
-  parse(bm, argv[1]);
+  Bm *bm=parse(argv[1]);
   printbm(bm);
   free(bm);
   return EXIT_SUCCESS;
@@ -29,7 +27,9 @@ void printbm(Bm *bm){
     printf("[%d]\n",bm->b);
   }
 }
-int parse(Bm *bm, char *str){
+Bm *parse(char *str){
+  Bm *bm=malloc(sizeof(Bm));
+  bm->m=malloc(sizeof(Int)*BM_ELEMS_MAX);
   bm->xs=0;
   bm->ys=-1;
   int ys = 0;
@@ -58,7 +58,7 @@ int parse(Bm *bm, char *str){
         bm->xs++;
         if(bm->ys!=-1 && bm->ys!=ys){
           fprintf(stderr,"error:ys mismatch in %s\n",str);
-          return EXIT_FAILURE;
+          return NULL;
         }
         bm->ys=ys;
       break;
@@ -75,5 +75,6 @@ int parse(Bm *bm, char *str){
       bm->b+=*c-'0';
     }
   }
-  return EXIT_SUCCESS;
+  return bm;
 }
+
