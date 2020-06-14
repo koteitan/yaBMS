@@ -5,11 +5,15 @@
 #include <getopt.h>
 #include "bms.h"
 #define BM_ELEMS_MAX 256
+static void printhelp(void);
 int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
   char arg;
-  while((arg=getopt(argc, argv, "v:")) != -1){
+  while((arg=getopt(argc, argv, "v:h")) != -1){
     switch(arg){
+      case 'h':
+        printhelp();
+        return EXIT_SUCCESS;
       case 'v':
         if(strcmp(optarg,"4")  ==0 ||
            strcmp(optarg,"4.0")==0 ||
@@ -23,6 +27,11 @@ int main(int argc, char **argv){
       default:
       break;
     }
+  }
+  if(optind!=argc-1){
+    printf("error: input is invalid.\n\n");
+    printhelp();
+    return EXIT_FAILURE;
   }
   Bm *bm=parse(argv[optind]);
   Bm *bm1=expand(bm,ver);
@@ -219,18 +228,19 @@ Bm* expand(Bm* bm0, eBMS_VER ver){
   bm1->xs=xs-1+b*bpxs;
   bm1->b=b;
 #if 1
+  printf("\nInput               =");
   printbm(bm0);
-  printf(")\nParent Index Matrix =");
+  printf("\nParent Index Matrix =");
   for(x=0;x<xs;x++){
     printf("(%d",pim[x*ys]);
     for(y=1;y<ys;y++) printf(",%d",pim[x*ys+y]);
     printf(")");
   }
-  printf("\nbad root        = %d\n",r);
-  printf("lnz             = %d\n",lnz);
-  printf("delta           =(%d",delta[0]);
+  printf("\nbad root            = %d\n",r);
+  printf("lnz                 = %d\n",lnz);
+  printf("delta               =(%d",delta[0]);
   for(y=1;y<lnz;y++)printf(",%d",delta[y]);
-  printf(")\nAsension Matrix =");
+  printf(")\nAsension Matrix     =");
   for(x=0;x<bpxs;x++){
     printf("(%d",am[x*lnz]);
     for(y=1;y<lnz;y++) printf(",%d",am[x*lnz+y]);
@@ -244,6 +254,11 @@ Bm* expand(Bm* bm0, eBMS_VER ver){
   if(delta) free(delta);
   return bm1;
 }
-
-
-
+static void printhelp(void){
+  printf("usage  : bms [-v ver] <bm>\n"
+         " expand bashicu matrix bm in version ver.\n"
+         "example: bms -v 4 \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[12]\"\n"
+         "param  : ver = version = {4, 2}, default = 2\n"
+         "         bm  = bashicu matrix with bracket to expand\n"
+         "notes  : activate function is f(x)=x.\n");
+}
