@@ -1,12 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <error.h>
+#include <unistd.h>
+#include <getopt.h>
 #include "bms.h"
 #define BM_ELEMS_MAX 256
 int main(int argc, char **argv){
-  Bm *bm=parse(argv[1]);
-  Bm *bm1=expand(bm);
+  eBMS_VER ver=eBMS_VER_4;
+  char arg;
+  while((arg=getopt(argc, argv, "v:")) != -1){
+    switch(arg){
+      case 'v':
+        if(strcmp(optarg,"4")  ==0 ||
+           strcmp(optarg,"4.0")==0 ||
+           strcmp(optarg,"2,3")==0){
+          ver = eBMS_VER_4;
+        }else if(strcmp(optarg,"2"  )==0 ||
+                 strcmp(optarg,"2.0")==0){
+          ver = eBMS_VER_2;
+        }
+      break;
+      default:
+      break;
+    }
+  }
+  Bm *bm=parse(argv[optind]);
+  Bm *bm1=expand(bm,ver);
+  printf("%s",version_string[ver]);
   printbm(bm1);
   printf("\n");
   free(bm);
@@ -84,7 +104,7 @@ Bm* initbm(void){
   bm->m = malloc(sizeof(int)*BM_ELEMS_MAX);
   return bm;
 }
-Bm* expand(Bm* bm0){
+Bm* expand(Bm* bm0, eBMS_VER ver){
   int x,y;
   Bm *bm1=initbm();
   int xs=bm0->xs;
@@ -150,17 +170,31 @@ Bm* expand(Bm* bm0){
   int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*lnz+y]=0:not ascend/1:ascend */
   memset(am,0,sizeof(int)*bpxs*lnz);
   wp=am;
-  for(y=0;y<lnz;y++) *wp++=1;
-  for(x=1;x<bpxs;x++){
-    rp=&pim[(r+x)*ys];
-    for(y=0;y<lnz;y++){
-      if(*rp==-1){
-        *wp++=0;
-      }else{
-        *wp++ = am[(*rp-r)*lnz+y];
+  for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
+  switch(ver){
+    case eBMS_VER_4:
+      for(x=1;x<bpxs;x++){
+        rp=&pim[(r+x)*ys];
+        for(y=0;y<lnz;y++){
+          if(*rp==-1){
+            *wp++=0;
+          }else{
+            *wp++ = am[(*rp-r)*lnz+y];
+          }
+          rp++;
+        }
       }
-      rp++;
-    }
+    break;
+    case eBMS_VER_2:
+      for(x=1;x<bpxs;x++){
+        for(y=0;y<lnz;y++){
+          int pi = pim[(r+x)*ys+0]; /* BM2 always see first row(0) */
+          *wp++ = pi>=0 && am[(pi-r)*lnz+y] && m[(r+x)*ys+y]>m[r*ys+y];
+        }
+      }
+    break;
+    default:
+    break;
   }
 
   /* copy good part+first bad part */

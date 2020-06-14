@@ -6,6 +6,17 @@ typedef struct{
   int b;  /** bracket */
 }Bm;/* Bashicu Matrix (BM) with bracket */
 
+#define VERSIONS (2)
+typedef enum{
+  eBMS_VER_4=0, /* BM4 */
+  eBMS_VER_2=1, /* BM2 */
+}eBMS_VER;
+
+const char version_string[VERSIONS][16]={
+  "BM4",
+  "BM2"
+};
+
 /** @fn Bm* initbm(void)
  * @brief allocate memory for new BM and returns the pointer of BM.
  * @return the pointer for the new BM */
@@ -25,5 +36,6 @@ void printbm(Bm *bm);
 /** @fn Bm* expand(Bm* bm0)
  * @brief Allocate memory for new BM, expand bm0 into new BM memory, and return its pointer.
  * @param bm0 = initial matrix.
+ * @param ver = version of expansion.
  * @return the pointer for the expansion result */
-Bm* expand(Bm* bm0);
+Bm* expand(Bm* bm0, eBMS_VER ver);
