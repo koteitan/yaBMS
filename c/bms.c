@@ -155,14 +155,14 @@ Bm* expand(Bm* bm0){
     }
   }
 
-  /* copy good part */
-  memcpy(bm1->m,m,r*ys);
+  /* copy good part+first bad part */
+  memcpy(bm1->m,m,sizeof(Int)*(xs-1)*ys);
   
-  /* copy bad part */
-  Int *rpam=&m[(r -1)*lnz];
-  Int *rp  =&m[(r -1)*ys];
-       wp  =&m[(xs-1)*ys];
+  /* copy new bad part */
+  Int *rp  =&bm1->m[ r    *ys];
+       wp  =&bm1->m[(xs-1)*ys];
   for(int a=0;a<b;a++){ /* copy b times */
+    Int *rpam=&am[0];
     for(x=0;x<bpxs;x++){
       Int *pd=&delta[0];
       for(y=0;y<lnz;y++){
@@ -175,18 +175,18 @@ Bm* expand(Bm* bm0){
   }
   bm1->ys=ys;
   bm1->xs=xs-1+b*bpxs;
+  bm1->b=b;
 #if 1
   printbm(bm0);
-  printf("\nbr = %d\n",r);
-  printf("lnz = %d\n",lnz);
-  printf("delta = %d",delta[0]);
+  printf("\nbad root        = %d\n",r);
+  printf("lnz             = %d\n",lnz);
+  printf("delta           =(%d",delta[0]);
   for(y=1;y<lnz;y++)printf(",%d",delta[y]);
-  printf("\n Asension Matrix=\n");
+  printf(")\nAsension Matrix =");
   for(x=0;x<bpxs;x++){
     printf("(%d",am[x*lnz]);
-    for(y=1;y<lnz;y++){
-      printf(",%d",am[x*lnz+y]);
-    }
+    for(y=1;y<lnz;y++) printf(",%d",am[x*lnz+y]);
+    for(y=lnz;y<ys;y++) printf(",0");
     printf(")");
   }
   printf("\n\n");
