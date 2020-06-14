@@ -141,12 +141,17 @@ Bm* expand(Bm* bm0){
   }
   
   /* make ascension matrix */ 
-  Int *am=malloc(sizeof(Int)*(xs-1)*ys); /* am[x*ys+y]=0:not ascend/1:ascend */
-  memset(am,0,sizeof(Int)*(xs-1)*ys);
-  for(y=0;y<lnz;y++) am[y]=1;
-  for(x=0;x<bpxs;x++){
+  Int *am=malloc(sizeof(Int)*bpxs*lnz); /* am[x*ys+y]=0:not ascend/1:ascend */
+  memset(am,0,sizeof(Int)*bpxs*lnz);
+  Int *wp=&am[0];
+  for(y=0;y<lnz;y++) *wp++=1;
+  for(x=1;x<bpxs;x++){
     for(y=0;y<lnz;y++){
-      am[x*ys+y] = am[pim[(r+x)*ys+y]-r];
+      if(pim[(r+x)*ys+y]==-1){
+        *wp++=0;
+      }else{
+        *wp++ = am[(pim[(r+x)*ys+y]-r)*lnz+y];
+      }
     }
   }
 
@@ -154,9 +159,9 @@ Bm* expand(Bm* bm0){
   memcpy(bm1->m,m,r*ys);
   
   /* copy bad part */
-  Int *rpam=&m[(r -1)*ys];
+  Int *rpam=&m[(r -1)*lnz];
   Int *rp  =&m[(r -1)*ys];
-  Int *wp  =&m[(xs-1)*ys];
+       wp  =&m[(xs-1)*ys];
   for(int a=0;a<b;a++){ /* copy b times */
     for(x=0;x<bpxs;x++){
       Int *pd=&delta[0];
@@ -178,9 +183,9 @@ Bm* expand(Bm* bm0){
   for(y=1;y<lnz;y++)printf(",%d",delta[y]);
   printf("\n Asension Matrix=\n");
   for(x=0;x<bpxs;x++){
-    printf("(%d",am[x*ys]);
-    for(y=1;y<ys;y++){
-      printf(",%d",am[x*ys+y]);
+    printf("(%d",am[x*lnz]);
+    for(y=1;y<lnz;y++){
+      printf(",%d",am[x*lnz+y]);
     }
     printf(")");
   }
