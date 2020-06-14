@@ -3,7 +3,8 @@ typedef struct{
   int xs; /** number of columns */
   int ys; /** number of rows */
   int *m; /** matrix body */
-  int b;  /** bracket */
+  int bs; /** number of brackets */
+  int *b; /** brackets */
 }Bm;/* Bashicu Matrix (BM) with bracket */
 
 #define VERSIONS (2)
@@ -33,9 +34,10 @@ Bm* parse(char *str);
  * @param bm = BM to print */
 void printbm(Bm *bm);
 
-/** @fn Bm* expand(Bm* bm0)
+/** @fn Bm* expand(Bm* bm0, eBMS_VER, int detail)
  * @brief Allocate memory for new BM, expand bm0 into new BM memory, and return its pointer.
  * @param bm0 = initial matrix.
  * @param ver = version of expansion.
+ * @param detail != 0:show detail.
  * @return the pointer for the expansion result */
-Bm* expand(Bm* bm0, eBMS_VER ver);
+Bm* expand(Bm* bm0, eBMS_VER ver, int detail);

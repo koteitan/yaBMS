@@ -4,16 +4,21 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "bms.h"
-#define BM_ELEMS_MAX 256
+#define BMS_ELEMS_MAX 256
+#define BMS_BRACKETS_MAX 256
 static void printhelp(void);
 int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
   char arg;
-  while((arg=getopt(argc, argv, "v:h")) != -1){
+  int detail=0;
+  while((arg=getopt(argc, argv, "v:hd")) != -1){
     switch(arg){
       case 'h':
         printhelp();
         return EXIT_SUCCESS;
+      case 'd':
+        detail = 1;
+      break;
       case 'v':
         if(strcmp(optarg,"4")  ==0 ||
            strcmp(optarg,"4.0")==0 ||
@@ -33,13 +38,23 @@ int main(int argc, char **argv){
     printhelp();
     return EXIT_FAILURE;
   }
-  Bm *bm=parse(argv[optind]);
-  Bm *bm1=expand(bm,ver);
+  Bm *bm0=parse(argv[optind]);
   printf("%s",version_string[ver]);
-  printbm(bm1);
+  printbm(bm0);
   printf("\n");
-  free(bm);
-  free(bm1);
+  while(bm0->bs>0){
+    Bm *bm1=expand(bm0,ver,detail);
+    printf("%s",version_string[ver]);
+    printbm(bm1);
+    printf("\n");
+    memcpy(bm0->m, bm1->m, sizeof(int)*bm1->xs*bm1->xs);
+    memcpy(bm0->b, bm1->b, sizeof(int)*bm1->bs);
+    bm0->bs=bm1->bs;
+    bm0->xs=bm1->xs;
+    bm0->ys=bm1->ys;
+    free(bm1);
+  }
+  free(bm0);
   return EXIT_SUCCESS;
 }
 void printbm(Bm *bm){
@@ -56,7 +71,9 @@ void printbm(Bm *bm){
         printf(")");
       }
     }
-    printf("[%d]",bm->b);
+    for(int b=0;b<bm->bs;b++){
+      printf("[%d]",bm->b[b]);
+    }
   }
 }
 Bm *parse(char *str){
@@ -97,31 +114,60 @@ Bm *parse(char *str){
       break;
     }//switch
   }//for
-  //parse bracket
-  for(;*c!=']'&&*c!='\0';c++){
+
+  //parse brackets
+  wp=bm->b;
+  bm->bs=0;
+  for(int exit=0;!exit;c++){
     switch(*c){
       case '0': case '1': case '2': case '3': case '4': case '5':
       case '6': case '7': case '8': case '9': 
-      bm->b*=10;
-      bm->b+=*c-'0';
+        *wp*=10;
+        *wp=*c-'0';
+      break;
+      case ']':
+        wp++;
+        *wp=0;
+        bm->bs++;
+      break;
+      case '\0':
+        exit=1; /* exit */
+      break;
+      default:
+        /* ignore */
+      break;
     }
   }
   return bm;
 }
 Bm* initbm(void){
   Bm *bm=malloc(sizeof(Bm));
-  bm->m = malloc(sizeof(int)*BM_ELEMS_MAX);
+  bm->m = malloc(sizeof(int)*BMS_ELEMS_MAX);
+  bm->b = malloc(sizeof(int)*BMS_BRACKETS_MAX);
   return bm;
 }
-Bm* expand(Bm* bm0, eBMS_VER ver){
-  int x,y;
-  Bm *bm1=initbm();
+Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
+  Bm *bm1=initbm(); /* expand result */
+  if(bm0->bs==0){ /* in the case of no brackets  */
+    /* return identical */
+    Bm *bm1=initbm();
+    memcpy(bm1,bm0,sizeof(Bm));
+    memcpy(bm1->m,bm0->m,sizeof(int)*bm0->xs+bm0->ys);
+    memcpy(bm1->b,bm0->b,sizeof(int)*bm0->bs);
+    return bm1;
+  }
+  /* brackets */
+  int bs=bm0->bs;
+  int b =bm0->b[0]; /* top bracket */
+  bm1->bs=bs-1;
+  memcpy(bm1->b, &(bm0->b[1]), sizeof(int)*(bs-1));
+  
   int xs=bm0->xs;
   int ys=bm0->ys;
   int *m=bm0->m;
-  int b =bm0->b;
   int xsm1ys = (xs-1)*ys;
   int *p=&m[xsm1ys];
+  int x,y;
 
   /* find lowermost non zero */
   for(y=0;y<ys;y++){
@@ -134,7 +180,6 @@ Bm* expand(Bm* bm0, eBMS_VER ver){
     memcpy(bm1->m, bm0->m, sizeof(int)*xsm1ys);
     bm1->xs=xs-1;
     bm1->ys=ys;
-    bm1->b=b;
     return bm1;
   }
   /* make parent index matrix */
@@ -226,39 +271,41 @@ Bm* expand(Bm* bm0, eBMS_VER ver){
   }
   bm1->ys=ys;
   bm1->xs=xs-1+b*bpxs;
-  bm1->b=b;
-#if 1
-  printf("\nInput               =");
-  printbm(bm0);
-  printf("\nParent Index Matrix =");
-  for(x=0;x<xs;x++){
-    printf("(%d",pim[x*ys]);
-    for(y=1;y<ys;y++) printf(",%d",pim[x*ys+y]);
-    printf(")");
+  if(detail){
+    printf("\nInput               =");
+    printbm(bm0);
+    printf("\nParent Index Matrix =");
+    for(x=0;x<xs;x++){
+      printf("(%d",pim[x*ys]);
+      for(y=1;y<ys;y++) printf(",%d",pim[x*ys+y]);
+      printf(")");
+    }
+    printf("\nbad root            = %d\n",r);
+    printf("lnz                 = %d\n",lnz);
+    printf("delta               =(%d",delta[0]);
+    for(y=1;y<lnz;y++)printf(",%d",delta[y]);
+    printf(")\nAsension Matrix     =");
+    for(x=0;x<bpxs;x++){
+      printf("(%d",am[x*lnz]);
+      for(y=1;y<lnz;y++) printf(",%d",am[x*lnz+y]);
+      for(y=lnz;y<ys;y++) printf(",0");
+      printf(")");
+    }
+    printf("\n\n");
   }
-  printf("\nbad root            = %d\n",r);
-  printf("lnz                 = %d\n",lnz);
-  printf("delta               =(%d",delta[0]);
-  for(y=1;y<lnz;y++)printf(",%d",delta[y]);
-  printf(")\nAsension Matrix     =");
-  for(x=0;x<bpxs;x++){
-    printf("(%d",am[x*lnz]);
-    for(y=1;y<lnz;y++) printf(",%d",am[x*lnz+y]);
-    for(y=lnz;y<ys;y++) printf(",0");
-    printf(")");
-  }
-  printf("\n\n");
-#endif
   if(am) free(am);
   if(pim) free(pim);
   if(delta) free(delta);
   return bm1;
 }
 static void printhelp(void){
-  printf("usage  : bms [-v ver] <bm>\n"
+  printf("usage  : bms [-v ver] [-h] [-d] <bm>\n"
          " expand bashicu matrix bm in version ver.\n"
          "example: bms -v 4 \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[12]\"\n"
-         "param  : ver = version = {4, 2}, default = 2\n"
-         "         bm  = bashicu matrix with bracket to expand\n"
+         "param  : bm  = bashicu matrix with bracket to expand\n"
+         "options:\n"
+         "-v ver : expand with version ver.\n"
+         "         ver = {4, 2} (default = 2)\n"
+         "-d     : show detail output\n"
          "notes  : activate function is f(x)=x.\n");
 }
