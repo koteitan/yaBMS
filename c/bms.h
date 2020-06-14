@@ -7,5 +7,7 @@ typedef struct{
   Int b;
 }Bm;
 
+Bm* initbm(void);
 Bm* parse(char *str);
 void printbm(Bm *bm);
+Bm* expand(Bm* bm0);

@@ -28,8 +28,7 @@ void printbm(Bm *bm){
   }
 }
 Bm *parse(char *str){
-  Bm *bm=malloc(sizeof(Bm));
-  bm->m=malloc(sizeof(Int)*BM_ELEMS_MAX);
+  Bm *bm=initbm();
   bm->xs=0;
   bm->ys=-1;
   int ys = 0;
@@ -77,4 +76,8 @@ Bm *parse(char *str){
   }
   return bm;
 }
-
+Bm* initbm(void){
+  Bm *bm=malloc(sizeof(Bm));
+  bm->m = malloc(sizeof(Int)*BM_ELEMS_MAX);
+  return bm;
+}
