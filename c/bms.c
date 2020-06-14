@@ -91,7 +91,8 @@ Bm* expand(Bm* bm0){
   int ys=bm0->ys;
   int *m=bm0->m;
   int b =bm0->b;
-  int *p=&m[(xs-1)*ys];
+  int xsm1ys = (xs-1)*ys;
+  int *p=&m[xsm1ys];
 
   /* find lowermost non zero */
   for(y=0;y<ys;y++){
@@ -101,7 +102,7 @@ Bm* expand(Bm* bm0){
 
   /* simple cut case */
   if(y==0){ /* child=(0,...,0)  */
-    memcpy(bm1->m, bm0->m, sizeof(int)*(xs-1)*ys);
+    memcpy(bm1->m, bm0->m, sizeof(int)*xsm1ys);
     bm1->xs=xs-1;
     bm1->ys=ys;
     bm1->b=b;
@@ -109,26 +110,31 @@ Bm* expand(Bm* bm0){
   }
   /* make parent index matrix */
   int *pim=malloc(sizeof(int)*xs*ys); /* parent index matrix  */
-  for(y=0;y<ys;y++){
-    for(x=0;x<xs;x++){
-      int c=m[x*ys+y];
+  int *rp=&m[0];
+  int *wp=&pim[0];
+  for(x=0;x<xs;x++){
+
+    /* the 1st row */
+    int c=*rp++;
+    int px;
+    for(px=x-1;px>=0;px--){
+      if(m[px*ys]<c) break;
+    }
+    *wp++=px;
+      
+    /* the 2nd or lower rows */
+    for(y=1;y<ys;y++){
+      c=*rp++;
       if(c==0){
-        pim[x*ys+y]=-1;
+        *wp++=-1;
         continue;
       }
-      int px; /* parent index */
-      if(y==0){
-        for(px=x-1;px>=0;px--){
-          if(m[px*ys+y]<c) break;
-        }
-      }else{
-        for(px=pim[x*ys+y-1];px!=-1;px=pim[px*ys+y-1]){
-          if(m[px*ys+y]<c) break;
-        }
+      for(px=*(wp-1);px!=-1;px=pim[px*ys+y-1]){
+        if(m[px*ys+y]<c) break;
       }
-      pim[x*ys+y]=px;
-    }/* for x */
-  }/* for y */
+      *wp++=px;
+    }/* for y */
+  }/* for x */
 
   /* find bad root */
   int r=pim[(x-1)*ys+lnz]; /* bad root index */
@@ -137,13 +143,13 @@ Bm* expand(Bm* bm0){
   /* make delta */
   int *delta=malloc(sizeof(int)*lnz); /* delta[y] = ascension height of row y */
   for(y=0;y<lnz;y++){
-    delta[y]=m[(xs-1)*ys+y]-m[r*ys+y];
+    delta[y]=m[xsm1ys+y]-m[r*ys+y];
   }
   
   /* make ascension matrix */ 
   int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*ys+y]=0:not ascend/1:ascend */
   memset(am,0,sizeof(int)*bpxs*lnz);
-  int *wp=&am[0];
+  wp=am;
   for(y=0;y<lnz;y++) *wp++=1;
   for(x=1;x<bpxs;x++){
     for(y=0;y<lnz;y++){
@@ -156,11 +162,11 @@ Bm* expand(Bm* bm0){
   }
 
   /* copy good part+first bad part */
-  memcpy(bm1->m,m,sizeof(int)*(xs-1)*ys);
+  memcpy(bm1->m,m,sizeof(int)*xsm1ys);
   
   /* copy new bad part */
-  int *rp  =&bm1->m[ r    *ys];
-       wp  =&bm1->m[(xs-1)*ys];
+  rp  =&bm1->m[ r    *ys];
+  wp  =&bm1->m[xsm1ys];
   for(int a=0;a<b;a++){ /* copy b times */
     int *rpam=&am[0];
     for(x=0;x<bpxs;x++){
@@ -178,6 +184,12 @@ Bm* expand(Bm* bm0){
   bm1->b=b;
 #if 1
   printbm(bm0);
+  printf(")\nParent Index Matrix =");
+  for(x=0;x<xs;x++){
+    printf("(%d",pim[x*ys]);
+    for(y=1;y<ys;y++) printf(",%d",am[x*ys+y]);
+    printf(")");
+  }
   printf("\nbad root        = %d\n",r);
   printf("lnz             = %d\n",lnz);
   printf("delta           =(%d",delta[0]);
