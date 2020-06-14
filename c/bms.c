@@ -8,6 +8,7 @@ int main(int argc, char **argv){
   Bm *bm=parse(argv[1]);
   Bm *bm1=expand(bm);
   printbm(bm1);
+  printf("\n");
   free(bm);
   free(bm1);
   return EXIT_SUCCESS;
@@ -26,7 +27,7 @@ void printbm(Bm *bm){
         printf(")");
       }
     }
-    printf("[%d]\n",bm->b);
+    printf("[%d]",bm->b);
   }
 }
 Bm *parse(char *str){
@@ -93,13 +94,11 @@ Bm* expand(Bm* bm0){
   int *p=&m[(xs-1)*ys];
 
   /* find lowermost non zero */
-  int lnz;
   for(y=0;y<ys;y++){
-    if(*p++==0){
-      lnz=y-1;
-      break;
-    }
+    if(*p++==0) break;
   }
+  int lnz=y-1;
+
   /* simple cut case */
   if(y==0){ /* child=(0,...,0)  */
     memcpy(bm1->m, bm0->m, sizeof(Int)*(xs-1)*ys);
@@ -128,13 +127,70 @@ Bm* expand(Bm* bm0){
         }
       }
       pim[x*ys+y]=px;
-#if 1
-      bm1->m[x*ys+y]=(Int)px;
-      bm1->xs=xs;
-      bm1->ys=ys;
-      bm1->b=b;
-#endif
     }/* for x */
   }/* for y */
+
+  /* find bad root */
+  int r=pim[(x-1)*ys+lnz]; /* bad root index */
+  int bpxs = xs-r-1; /* number of columns of bad part */
+
+  /* make delta */
+  Int *delta=malloc(sizeof(Int)*lnz); /* delta[y] = ascension height of row y */
+  for(y=0;y<lnz;y++){
+    delta[y]=m[(xs-1)*ys+y]-m[r*ys+y];
+  }
+  
+  /* make ascension matrix */ 
+  Int *am=malloc(sizeof(Int)*(xs-1)*ys); /* am[x*ys+y]=0:not ascend/1:ascend */
+  memset(am,0,sizeof(Int)*(xs-1)*ys);
+  for(y=0;y<lnz;y++) am[y]=1;
+  for(x=0;x<bpxs;x++){
+    for(y=0;y<lnz;y++){
+      am[x*ys+y] = am[pim[(r+x)*ys+y]-r];
+    }
+  }
+
+  /* copy good part */
+  memcpy(bm1->m,m,r*ys);
+  
+  /* copy bad part */
+  Int *rpam=&m[(r -1)*ys];
+  Int *rp  =&m[(r -1)*ys];
+  Int *wp  =&m[(xs-1)*ys];
+  for(int a=0;a<b;a++){ /* copy b times */
+    for(x=0;x<bpxs;x++){
+      Int *pd=&delta[0];
+      for(y=0;y<lnz;y++){
+        *wp++=*rp++ + (*rpam++)*(*pd++);
+      }
+      for(y=lnz;y<ys;y++){
+        *wp++=*rp++;
+      }
+    }
+  }
+  bm1->ys=ys;
+  bm1->xs=xs-1+b*bpxs;
+#if 1
+  printbm(bm0);
+  printf("\nbr = %d\n",r);
+  printf("lnz = %d\n",lnz);
+  printf("delta = %d",delta[0]);
+  for(y=1;y<lnz;y++)printf(",%d",delta[y]);
+  printf("\n Asension Matrix=\n");
+  for(x=0;x<bpxs;x++){
+    printf("(%d",am[x*ys]);
+    for(y=1;y<ys;y++){
+      printf(",%d",am[x*ys+y]);
+    }
+    printf(")");
+  }
+  printf("\n\n");
+#endif
+  if(am) free(am);
+  if(pim) free(pim);
+  if(delta) free(delta);
   return bm1;
 }
+
+
+
