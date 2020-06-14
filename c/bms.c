@@ -147,17 +147,19 @@ Bm* expand(Bm* bm0){
   }
   
   /* make ascension matrix */ 
-  int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*ys+y]=0:not ascend/1:ascend */
+  int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*lnz+y]=0:not ascend/1:ascend */
   memset(am,0,sizeof(int)*bpxs*lnz);
   wp=am;
   for(y=0;y<lnz;y++) *wp++=1;
   for(x=1;x<bpxs;x++){
+    rp=&pim[(r+x)*ys];
     for(y=0;y<lnz;y++){
-      if(pim[(r+x)*ys+y]==-1){
+      if(*rp==-1){
         *wp++=0;
       }else{
-        *wp++ = am[(pim[(r+x)*ys+y]-r)*lnz+y];
+        *wp++ = am[(*rp-r)*lnz+y];
       }
+      rp++;
     }
   }
 
@@ -187,7 +189,7 @@ Bm* expand(Bm* bm0){
   printf(")\nParent Index Matrix =");
   for(x=0;x<xs;x++){
     printf("(%d",pim[x*ys]);
-    for(y=1;y<ys;y++) printf(",%d",am[x*ys+y]);
+    for(y=1;y<ys;y++) printf(",%d",pim[x*ys+y]);
     printf(")");
   }
   printf("\nbad root        = %d\n",r);
