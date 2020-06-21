@@ -140,12 +140,14 @@ Bm *parse(char *str){
   }
   return bm;
 }
+
 Bm* initbm(void){
   Bm *bm=malloc(sizeof(Bm));
   bm->m = malloc(sizeof(int)*BMS_ELEMS_MAX);
   bm->b = malloc(sizeof(int)*BMS_BRACKETS_MAX);
   return bm;
 }
+
 Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   Bm *bm1=initbm(); /* expand result */
   if(bm0->bs==0){ /* in the case of no brackets  */
@@ -219,7 +221,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   for(y=0;y<lnz;y++){
     delta[y]=m[xsm1ys+y]-m[r*ys+y];
   }
-  
+
   /* make ascension matrix */ 
   int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*lnz+y]=0:not ascend/1:ascend */
   memset(am,0,sizeof(int)*bpxs*lnz);
@@ -297,6 +299,18 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   if(pim) free(pim);
   if(delta) free(delta);
   return bm1;
+}
+int comparematrix(Bm *a, Bm *b){
+  int *pa=&a->m[0];
+  int *pb=&b->m[0];
+  int n=a->xs*a->ys;
+  for(int i=0;i<n;i++){
+    if(*pa>*pb)return +1;
+    if(*pa<*pb)return -1;
+    pa++;
+    pb++;
+  }
+  return 0;
 }
 static void printhelp(void){
   printf("usage  : bms [-v ver] [-h] [-d] <bm>\n"

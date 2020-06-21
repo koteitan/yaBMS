@@ -41,3 +41,11 @@ void printbm(Bm *bm);
  * @param detail != 0:show detail.
  * @return the pointer for the expansion result */
 Bm* expand(Bm* bm0, eBMS_VER ver, int detail);
+
+/** @fn int compareMatrix(Bm* a, Bm *b)
+ * @brief compare matrices of a and b and return which is larger. (brackets are ignored.)
+ * @param a, b input bm (xs and ys of them must be the same.)
+ * @return +1: if a>b
+ *          0: if a=b
+ *         -1: if a<b. */
+int comparematrix(Bm* a, Bm* b);
