@@ -1,10 +1,13 @@
 #pragma once
+
+#define BMS_ELEMS_MAX 256
+#define BMS_BRACKETS_MAX 256
 typedef struct{
   int xs; /** number of columns */
   int ys; /** number of rows */
-  int *m; /** matrix body */
+  int m[BMS_ELEMS_MAX]; /** matrix body */
   int bs; /** number of brackets */
-  int *b; /** brackets */
+  int b[BMS_BRACKETS_MAX]; /** brackets */
 }Bm;/* Bashicu Matrix (BM) with bracket */
 
 #define VERSIONS (2)
@@ -42,10 +45,17 @@ void printbm(Bm *bm);
  * @return the pointer for the expansion result */
 Bm* expand(Bm* bm0, eBMS_VER ver, int detail);
 
-/** @fn int compareMatrix(Bm* a, Bm *b)
+/** @fn int compmat(Bm* a, Bm *b)
  * @brief compare matrices of a and b and return which is larger. (brackets are ignored.)
- * @param a, b input bm (xs and ys of them must be the same.)
+ * @param a, b input bm
  * @return +1: if a>b
  *          0: if a=b
  *         -1: if a<b. */
-int comparematrix(Bm* a, Bm* b);
+int compmat(Bm* a, Bm* b);
+
+/** @fn int isstd(Bm* b)
+ * @brief check b is standard.
+ * @param b input bm
+ * @return +1: if b is standard.
+ *          0: if b is not standard. */
+int isstd(Bm *b, eBMS_VER ver, int detail);

@@ -4,13 +4,12 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "bms.h"
-#define BMS_ELEMS_MAX 256
-#define BMS_BRACKETS_MAX 256
 static void printhelp(void);
 int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
-  char arg;
   int detail=0;
+  /* check option */
+  char arg;
   while((arg=getopt(argc, argv, "v:hd")) != -1){
     switch(arg){
       case 'h':
@@ -38,10 +37,16 @@ int main(int argc, char **argv){
     printhelp();
     return EXIT_FAILURE;
   }
+
   Bm *bm0=parse(argv[optind]);
+  /* print */
   printf("%s",version_string[ver]);
   printbm(bm0);
   printf("\n");
+  /* check std */
+  int std=isstd(bm0,ver,detail);
+  printf(std?"standard\n":"non-standard\n");
+  /* expand */
   while(bm0->bs>0){
     Bm *bm1=expand(bm0,ver,detail);
     printf("%s",version_string[ver]);
@@ -52,9 +57,9 @@ int main(int argc, char **argv){
     bm0->bs=bm1->bs;
     bm0->xs=bm1->xs;
     bm0->ys=bm1->ys;
-    free(bm1);
+    if(bm1)free(bm1);
   }
-  free(bm0);
+  if(bm0)free(bm0);
   return EXIT_SUCCESS;
 }
 void printbm(Bm *bm){
@@ -75,6 +80,19 @@ void printbm(Bm *bm){
       printf("[%d]",bm->b[b]);
     }
   }
+}
+Bm* initbm(void){
+  Bm *bm=malloc(sizeof(Bm));
+  return bm;
+}
+Bm* clone(Bm *bm0){
+  Bm *bm1=initbm();
+  bm1->xs=bm0->xs;
+  bm1->ys=bm0->ys;
+  bm1->bs=bm0->bs;
+  memcpy(bm1->m, bm0->m, sizeof(int)*bm0->xs*bm0->ys);
+  memcpy(bm1->b, bm0->b, sizeof(int)*bm0->bs);
+  return bm1;
 }
 Bm *parse(char *str){
   Bm *bm=initbm();
@@ -141,13 +159,6 @@ Bm *parse(char *str){
   return bm;
 }
 
-Bm* initbm(void){
-  Bm *bm=malloc(sizeof(Bm));
-  bm->m = malloc(sizeof(int)*BMS_ELEMS_MAX);
-  bm->b = malloc(sizeof(int)*BMS_BRACKETS_MAX);
-  return bm;
-}
-
 Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   Bm *bm1=initbm(); /* expand result */
   if(bm0->bs==0){ /* in the case of no brackets  */
@@ -178,7 +189,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   int lnz=y-1;
 
   /* simple cut case */
-  if(y==0){ /* child=(0,...,0)  */
+  if(y==0||b==0){ /* child=(0,...,0) or X[0] */
     memcpy(bm1->m, bm0->m, sizeof(int)*xsm1ys);
     bm1->xs=xs-1;
     bm1->ys=ys;
@@ -300,17 +311,116 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   if(delta) free(delta);
   return bm1;
 }
-int comparematrix(Bm *a, Bm *b){
+int compmat(Bm *a, Bm *b){
   int *pa=&a->m[0];
   int *pb=&b->m[0];
-  int n=a->xs*a->ys;
-  for(int i=0;i<n;i++){
-    if(*pa>*pb)return +1;
-    if(*pa<*pb)return -1;
-    pa++;
-    pb++;
+  if(a->ys < b->ys){
+    for(int x=0;x<b->xs;x++){
+      for(int y=a->ys+1;y<b->ys;y++){
+        if(b->m[x*b->ys+y]!=0){
+          return +1;
+        }
+      }
+    }
+    Bm *b1=initbm();
+    b1->xs=b->xs;
+    b1->ys=a->xs;
+    for(int x=0;x<a->xs;x++){
+      memcpy(&b1->m[x*b1->ys],&b->m[x*b->ys],sizeof(int)*(a->ys));
+    }
+    b1->bs=0;
+    int ret = compmat(a, b1);
+    if(b1)free(b1);
+    return ret;
+  }else if(a->ys < b->ys){
+    for(int x=0;x<a->xs;x++){
+      for(int y=b->ys+1;y<a->ys;y++){
+        if(a->m[x*a->ys+y]!=0){
+          return +1;
+        }
+      }
+    }
+    Bm *a1=initbm();
+    a1->xs=a->xs;
+    a1->ys=b->xs;
+    for(int x=0;x<b->xs;x++){
+      memcpy(&a1->m[x*a1->ys],&a->m[x*a->ys],sizeof(int)*(b->ys));
+    }
+    a1->bs=0;
+    int ret = compmat(a1, b);
+    if(a1)free(a1);
+    return ret;
+  }else{
+    /* lexicographical compare */
+    int n=a->xs*a->ys;
+    for(int i=0;i<n;i++){
+      if(*pa>*pb)return +1;
+      if(*pa<*pb)return -1;
+      pa++;
+      pb++;
+    }
+    if     (a->xs > b->xs) return +1;
+    else if(a->xs < b->xs) return -1;
+    else                   return  0;
   }
-  return 0;
+}
+int isstd(Bm *b, eBMS_VER ver, int detail){
+  /* find the first non-lexicographical element from stringly left */
+  Bm *s=initbm();
+  s->xs=b->xs;
+  s->ys=b->ys;
+  s->bs=0;
+  int *rp=b->m;
+  int *wp=s->m;
+  for(int x=0;x<s->xs;x++){
+    for(int y=0;y<s->ys;y++){
+      if(*rp>x){ /* illegal */
+        return 0;
+      }else if(*rp<x){ /* found */
+        *wp++=*rp+1;
+        memset(wp,0,sizeof(int)*(s->ys-y-1));
+        s->xs=x+1;
+        break;
+      }
+      *wp=x;
+      rp++;
+      wp++;
+    }
+  }
+  if(detail){printbm(s);printf("\n");}
+
+  int ret=-1;
+  while(ret==-1){
+    int oldxsm1=s->xs-1;
+    int bplen;
+    switch(compmat(s,b)){
+      case 0:
+        ret = 1;
+      break;
+      case +1:
+        /* try expand(s[1]) */
+        s->bs=1;
+        s->b[0]=1; 
+        Bm *s2=expand(s,ver,0);
+        bplen = s2->xs-oldxsm1;
+        s->b[0] = (b->xs-oldxsm1)/bplen+1;
+        if(s2)free(s2);
+        /* expand(s[n]) > b */
+        s2=expand(s,ver,0);
+        if(s)free(s);
+        s=s2;
+        /* cut in the size of b */
+        s->xs=b->xs;
+        if(detail){printbm(s);printf("\n");}
+      break;
+      case -1:
+        ret = 0;
+      default:
+      break;
+    }
+  }
+  if(s)free(s);
+  return ret;
 }
 static void printhelp(void){
   printf("usage  : bms [-v ver] [-h] [-d] <bm>\n"
