@@ -7,25 +7,45 @@
 static void printhelp(void);
 int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
+  int flagstd=0;
+  int flagloop=0;
+  int flagexp=0;
+  int flagcont=0;
   int detail=0;
   /* check option */
   char arg;
-  while((arg=getopt(argc, argv, "v:hd")) != -1){
+  while((arg=getopt(argc, argv, "v:hdeslc")) != -1){
     switch(arg){
       case 'h':
         printhelp();
         return EXIT_SUCCESS;
-      case 'd':
-        detail = 1;
-      break;
+      case 'd': detail   = 1; break;
+      case 'l': flagloop = 1; break;
+      case 'e': flagexp  = 1; break;
+      case 'c': flagcont = 1; break;
+      case 's': flagstd  = 1; break;
       case 'v':
-        if(strcmp(optarg,"4")  ==0 ||
-           strcmp(optarg,"4.0")==0 ||
-           strcmp(optarg,"2,3")==0){
+        if(
+          strcmp(optarg,"4")  ==0 ||
+          strcmp(optarg,"4.0")==0 ||
+          strcmp(optarg,"2.3")==0 ||
+          strcmp(optarg,"BM4")  ==0 ||
+          strcmp(optarg,"BM4.0")==0 ||
+          strcmp(optarg,"BM2.3")==0 ||
+          0){
           ver = eBMS_VER_4;
-        }else if(strcmp(optarg,"2"  )==0 ||
-                 strcmp(optarg,"2.0")==0){
+        }else if(
+          strcmp(optarg,"BM2"  )==0 ||
+          strcmp(optarg,"BM2.0")==0 ||
+          strcmp(optarg,"2"  )==0 ||
+          strcmp(optarg,"2.0")==0 ||
+          0){
           ver = eBMS_VER_2;
+        }else if(
+          strcmp(optarg,"BM1.1")==0 ||
+          strcmp(optarg,"1.1"  )==0 ||
+          0){
+          ver = eBMS_VER_1d1;
         }
       break;
       default:
@@ -37,29 +57,43 @@ int main(int argc, char **argv){
     printhelp();
     return EXIT_FAILURE;
   }
-
+  if(!flagloop&&!flagexp&&!flagstd)flagexp=1;
   Bm *bm0=parse(argv[optind]);
-  /* print */
-  printbm(bm0);
-  printf("\n");
+
   /* check std */
-  int std=isstd(bm0,ver,detail);
-  printf(std?"standard\n":"non-standard\n");
-  /* check loop */
-  int isloop=checkloop(bm0,ver,detail);
-  /* expand */
-  while(bm0->bs>0){
-    Bm *bm1=expand(bm0,ver,detail);
-    printf("%s",version_string[ver]);
-    printbm(bm1);
-    printf("\n");
-    memcpy(bm0->m, bm1->m, sizeof(int)*bm1->xs*bm1->xs);
-    memcpy(bm0->b, bm1->b, sizeof(int)*bm1->bs);
-    bm0->bs=bm1->bs;
-    bm0->xs=bm1->xs;
-    bm0->ys=bm1->ys;
-    if(bm1)free(bm1);
+  if(flagstd){
+    int std=isstd(bm0,ver,detail);
+    if(detail){
+      printf(std?"standard.\n":"non-standard.\n");
+    }else{
+      printf(std?"1\n":"0\n");
+    }
   }
+
+  /* expand */
+  if(flagexp){
+    while(bm0->bs>0){
+      Bm *bm1=expand(bm0,ver,detail);
+      printbm(bm1);
+      printf("\n");
+      if(!flagcont)break;
+      memcpy(bm0->m, bm1->m, sizeof(int)*bm1->xs*bm1->xs);
+      memcpy(bm0->b, bm1->b, sizeof(int)*bm1->bs);
+      bm0->bs=bm1->bs;
+      bm0->xs=bm1->xs;
+      bm0->ys=bm1->ys;
+      if(bm1)free(bm1);
+    }
+  }
+
+  /* check loop */
+  if(flagloop){
+    int isloop=checkloop(bm0,ver,detail);
+    if(!detail){
+      printf(isloop?"1\n":"0\n");
+    }
+  }
+
   if(bm0)free(bm0);
   return EXIT_SUCCESS;
 }
@@ -162,7 +196,9 @@ Bm *parse(char *str){
 
 Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   Bm *bm1=initbm(); /* expand result */
-  if(bm0->bs==0){ /* in the case of no brackets  */
+
+  /* in the case of no brackets */
+  if(bm0->bs==0){ 
     /* return identical */
     Bm *bm1=initbm();
     memcpy(bm1,bm0,sizeof(Bm));
@@ -170,12 +206,22 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
     memcpy(bm1->b,bm0->b,sizeof(int)*bm0->bs);
     return bm1;
   }
+
+
   /* brackets */
   int bs=bm0->bs;
   int b =bm0->b[0]; /* top bracket */
   bm1->bs=bs-1;
   memcpy(bm1->b, &(bm0->b[1]), sizeof(int)*(bs-1));
   
+  
+  /* zero */
+  if(bm0->xs==0){ 
+    bm1->xs=0;
+    bm1->ys=0;
+    return bm1;
+  }
+
   int xs=bm0->xs;
   int ys=bm0->ys;
   int *m=bm0->m;
@@ -238,9 +284,12 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*lnz+y]=0:not ascend/1:ascend */
   memset(am,0,sizeof(int)*bpxs*lnz);
   wp=am;
-  for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
   switch(ver){
+    case eBMS_VER_1d1:
+      for(int n=0;n<bpxs*lnz;n++)*wp++=1;
+    break;
     case eBMS_VER_4:
+      for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
       for(x=1;x<bpxs;x++){
         rp=&pim[(r+x)*ys];
         for(y=0;y<lnz;y++){
@@ -254,6 +303,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
       }
     break;
     case eBMS_VER_2:
+      for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
       for(x=1;x<bpxs;x++){
         for(y=0;y<lnz;y++){
           int pi = pim[(r+x)*ys+0]; /* BM2 always see first row(0) */
@@ -293,6 +343,24 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
     for(x=0;x<xs;x++){
       printf("(%d",pim[x*ys]);
       for(y=1;y<ys;y++) printf(",%d",pim[x*ys+y]);
+      printf(")");
+    }
+    printf("\ngood part           =");
+    for(x=0;x<r;x++){
+      printf("(");
+      for(y=0;y<ys;y++){
+        printf("%d",bm0->m[x*ys+y]);
+        if(y<ys-1)printf(",");
+      }
+      printf(")");
+    }
+    printf("\nbad part            =");
+    for(x=r;x<xs-1;x++){
+      printf("(");
+      for(y=0;y<ys;y++){
+        printf("%d",bm0->m[x*ys+y]);
+        if(y<ys-1)printf(",");
+      }
       printf(")");
     }
     printf("\nbad root            = %d\n",r);
@@ -389,12 +457,12 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
       wp++;
     }
   }
-  if(detail){printbm(s);printf("\n");}
 
   int ret=-1;
   while(ret==-1){
     int oldxsm1=s->xs-1;
     int bplen;
+    if(detail){printbm(s);printf("\n");}
     switch(compmat(s,b)){
       case 0:
         ret = 1;
@@ -417,7 +485,16 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
         s=s2;
         /* cut in the size of b */
         s->xs=(s->xs>b->xs)?b->xs:s->xs;
+        /* reduce  */
+        for(int x=0;x<s->xs;x++){
+          for(int y=0;y<s->ys;y++){
+            if(s->m[x*s->ys+y] > b->m[x*s->ys+y]){
+              s->xs=x+1;
+            }
+          }
+        }
         if(detail){printbm(s);printf("\n");}
+
       break;
       case -1:
         ret = 0;
@@ -431,47 +508,74 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
 int checkloop(Bm *b, eBMS_VER ver, int detail){
   int ret=-1;
   int ys=b->ys;
-  Bm *eb=expand(b,  ver, 0);
-  eb->bs=1;
-  eb->b[0]=1;
-  Bm *eeb=expand(eb, ver, 0);
+  b->bs=1;
+  b->b[0]=1;
+  Bm *eb=expand(b,ver,0);
+  int bplen=eb->xs-(b->xs-1);
 
-  Bm *bp_eb=initbm();
-  bp_eb->xs=eeb->xs-(eb->xs-1); /* bad part */
-  bp_eb->ys=ys;
-  memcpy(bp_eb->m, &eb->m[(eb->xs-bp_eb->xs)*ys], sizeof(int)*bp_eb->xs*ys);
+  Bm *bpeb=initbm();
+  bpeb->xs=bplen+1;
+  bpeb->ys=ys;
+  bpeb->bs=0;
+  memcpy(bpeb->m, &b->m[(b->xs-(bplen+1))*ys], sizeof(int)*bpeb->xs*ys);
+  Bm *obpeb=clone(bpeb);
   for(int y=0;y<ys;y++){
-    int offset=bp_eb->m[y];
-    for(int x=0;x<bp_eb->xs;x++){
-      bp_eb->m[x*ys+y]-=offset;
+    int offset=bpeb->m[y];
+    for(int x=0;x<bpeb->xs;x++){
+      if(bpeb->m[x*ys+y]-offset>=0) obpeb->m[x*ys+y]-=offset;
     }
   }
-  printbm(b);printf(" = B\n");
-  printbm(eb);printf(" = expand(B)\n");
-  printbm(bp_eb);printf(" = badpart(expand(B))\n");
-  if(compmat(bp_eb,b)>0){
-    printf("It loops because\n");
-    printbm(bp_eb);
-    printf(" > ");
-    printbm(b);
-    printf("\n");
+  if(compmat(obpeb,b)>0){
+    ret = 1;
   }else{
-    printf("The loop was not found.\n");
+    ret = 0;
+  }
+  if(detail){
+    printf("version : %s\n",version_string[ver]);
+    printf("original: ");printbm(b);printf("\n");
+    printf("expanded: ");printbm(eb);printf("\n");
+    printf("bad part: ");printbm(bpeb);printf("\n");
+    printf("offset  : ");printbm(obpeb);printf("\n");
+    if(compmat(obpeb,b)>0){
+      printbm(obpeb);
+      printf(" > ");
+      printbm(b);
+      printf(" : Loop!\n");
+    }else{
+      if(detail){
+        printbm(bpeb);
+        printf(" < ");
+        printbm(b);
+        printf(" : The loop was not found.\n");
+      }
+    }
   }
 
   if(eb)free(eb);
-  if(eeb)free(eeb);
-  if(bp_eb)free(bp_eb);
+  if(bpeb)free(bpeb);
+  if(obpeb)free(obpeb);
   return ret;
 }
 static void printhelp(void){
-  printf("usage  : bms [-v ver] [-h] [-d] <bm>\n"
-         " expand bashicu matrix bm in version ver.\n"
-         "example: bms -v 4 \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[12]\"\n"
+  printf("usage  : bms [-e] [-d] [-c] [-v ver] <bm> # expands bm.\n"
+         "       : bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
+         "       : bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
+         "       : bms  -h                          # shows help.\n"
+         "\n"
+         "example: bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
+         "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)\n"
+         "\n"
+         "example: bms -c \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2][1]\"\n"
+         "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)[1]\n"
+         "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(3,3,1)\n"
+         "\n"
          "param  : bm  = bashicu matrix with bracket to expand\n"
+         "\n"
          "options:\n"
-         "-v ver : expand with version ver.\n"
-         "         ver = {4, 2} (default = 2)\n"
-         "-d     : show detail output\n"
+         " -v ver : expand with version ver.\n"
+         "          ver = {4, 2, 1.1} (default = 4)\n"
+         " -c     : continue to expand multi-brackets\n"
+         " -d     : show detail output\n"
+         "\n"
          "notes  : activate function is f(x)=x.\n");
 }
