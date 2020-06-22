@@ -533,7 +533,6 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
   if(detail){
     printf("version : %s\n",version_string[ver]);
     printf("original: ");printbm(b);printf("\n");
-    printf("expanded: ");printbm(eb);printf("\n");
     printf("bad part: ");printbm(bpeb);printf("\n");
     printf("offset  : ");printbm(obpeb);printf("\n");
     if(compmat(obpeb,b)>0){
