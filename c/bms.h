@@ -59,3 +59,4 @@ int compmat(Bm* a, Bm* b);
  * @return +1: if b is standard.
  *          0: if b is not standard. */
 int isstd(Bm *b, eBMS_VER ver, int detail);
+int checkloop(Bm *b, eBMS_VER ver, int detail);

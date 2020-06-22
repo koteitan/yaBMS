@@ -45,6 +45,8 @@ int main(int argc, char **argv){
   /* check std */
   int std=isstd(bm0,ver,detail);
   printf(std?"standard\n":"non-standard\n");
+  /* check loop */
+  int isloop=checkloop(bm0,ver,detail);
   /* expand */
   while(bm0->bs>0){
     Bm *bm1=expand(bm0,ver,detail);
@@ -424,6 +426,42 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
     }
   }
   if(s)free(s);
+  return ret;
+}
+int checkloop(Bm *b, eBMS_VER ver, int detail){
+  int ret=-1;
+  int ys=b->ys;
+  Bm *eb=expand(b,  ver, 0);
+  eb->bs=1;
+  eb->b[0]=1;
+  Bm *eeb=expand(eb, ver, 0);
+
+  Bm *bp_eb=initbm();
+  bp_eb->xs=eeb->xs-(eb->xs-1); /* bad part */
+  bp_eb->ys=ys;
+  memcpy(bp_eb->m, &eb->m[(eb->xs-bp_eb->xs)*ys], sizeof(int)*bp_eb->xs*ys);
+  for(int y=0;y<ys;y++){
+    int offset=bp_eb->m[y];
+    for(int x=0;x<bp_eb->xs;x++){
+      bp_eb->m[x*ys+y]-=offset;
+    }
+  }
+  printbm(b);printf(" = B\n");
+  printbm(eb);printf(" = expand(B)\n");
+  printbm(bp_eb);printf(" = badpart(expand(B))\n");
+  if(compmat(bp_eb,b)>0){
+    printf("It loops because\n");
+    printbm(bp_eb);
+    printf(" > ");
+    printbm(b);
+    printf("\n");
+  }else{
+    printf("The loop was not found.\n");
+  }
+
+  if(eb)free(eb);
+  if(eeb)free(eeb);
+  if(bp_eb)free(bp_eb);
   return ret;
 }
 static void printhelp(void){
