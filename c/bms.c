@@ -40,7 +40,6 @@ int main(int argc, char **argv){
 
   Bm *bm0=parse(argv[optind]);
   /* print */
-  printf("%s",version_string[ver]);
   printbm(bm0);
   printf("\n");
   /* check std */
@@ -285,7 +284,8 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   bm1->ys=ys;
   bm1->xs=xs-1+b*bpxs;
   if(detail){
-    printf("\nInput               =");
+    printf("\nversion             = %s\n",version_string[ver]);
+    printf("Input               =");
     printbm(bm0);
     printf("\nParent Index Matrix =");
     for(x=0;x<xs;x++){
@@ -403,14 +403,18 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
         s->b[0]=1; 
         Bm *s2=expand(s,ver,0);
         bplen = s2->xs-oldxsm1;
-        s->b[0] = (b->xs-oldxsm1)/bplen+1;
+        if(bplen!=0){
+          s->b[0] = (b->xs-oldxsm1)/bplen+1;
+        }else{
+          s->b[0]=0;
+        }
         if(s2)free(s2);
         /* expand(s[n]) > b */
         s2=expand(s,ver,0);
         if(s)free(s);
         s=s2;
         /* cut in the size of b */
-        s->xs=b->xs;
+        s->xs=(s->xs>b->xs)?b->xs:s->xs;
         if(detail){printbm(s);printf("\n");}
       break;
       case -1:
