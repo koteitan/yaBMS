@@ -10,11 +10,11 @@ int main(int argc, char **argv){
   int flagstd=0;
   int flagloop=0;
   int flagexp=0;
-  int flagcont=0;
+  int flagrec=0;
   int detail=0;
   /* check option */
   char arg;
-  while((arg=getopt(argc, argv, "v:hdeslc")) != -1){
+  while((arg=getopt(argc, argv, "v:hdeslcr")) != -1){
     switch(arg){
       case 'h':
         printhelp();
@@ -22,7 +22,7 @@ int main(int argc, char **argv){
       case 'd': detail   = 1; break;
       case 'l': flagloop = 1; break;
       case 'e': flagexp  = 1; break;
-      case 'c': flagcont = 1; break;
+      case 'r': flagrec  = 1; break;
       case 's': flagstd  = 1; break;
       case 'v':
         if(
@@ -52,9 +52,8 @@ int main(int argc, char **argv){
       break;
     }
   }
-  if(optind!=argc-1){
-    printf("error: input is invalid.\n\n");
-    printhelp();
+  if(argc<optind+1){
+    printf("error: input is not enough.\n");
     return EXIT_FAILURE;
   }
   if(!flagloop&&!flagexp&&!flagstd)flagexp=1;
@@ -76,9 +75,9 @@ int main(int argc, char **argv){
       Bm *bm1=expand(bm0,ver,detail);
       printbm(bm1);
       printf("\n");
-      if(!flagcont)break;
-      memcpy(bm0->m, bm1->m, sizeof(int)*bm1->xs*bm1->xs);
-      memcpy(bm0->b, bm1->b, sizeof(int)*bm1->bs);
+      if(!flagrec)break;
+      memcpy(&bm0->m[0], &bm1->m[0], sizeof(int)*bm1->xs*bm1->xs);
+      memcpy(&bm0->b[0], &bm1->b[0], sizeof(int)*bm1->bs);
       bm0->bs=bm1->bs;
       bm0->xs=bm1->xs;
       bm0->ys=bm1->ys;
@@ -88,14 +87,67 @@ int main(int argc, char **argv){
 
   /* check loop */
   if(flagloop){
-    int isloop=checkloop(bm0,ver,detail);
-    if(!detail){
-      printf(isloop?"1\n":"0\n");
+    if(flagrec){
+      if(argc!=optind+2){
+        printf("error: input is not enough.\n");
+        printf("usage: ./bms -lr bms0 bms1\n");
+        return EXIT_FAILURE;
+      }
+      Bm *bm1=parse(argv[optind+1]);
+      char *str=bm2str(bm1);
+      int ret=checklooprec(bm0, bm1, 3, str, ver, detail);
+      if(str)free(str);
+      if(detail){
+        printf("%s",ret?"loop!\n":"No loops found.\n");
+      }else{
+        printf("%s",ret?"1":"0");
+      }
+      if(bm1)free(bm1);
+    }else{
+      if(detail)printf("version : %s\n",version_string[ver]);
+      while(bm0->bs>0){
+        if(detail){
+          printf("original: ");printbm(bm0);printf("\n");
+        }
+        Bm *bm1=expand(bm0,ver,0);
+        memcpy(&bm0->m[0], &bm1->m[0], sizeof(int)*bm1->xs*bm1->xs);
+        memcpy(&bm0->b[0], &bm1->b[0], sizeof(int)*bm1->bs);
+        bm0->bs=bm1->bs;
+        bm0->xs=bm1->xs;
+        bm0->ys=bm1->ys;
+        if(bm1)free(bm1);
+      }
+      int isloop=checkloop(bm0,ver,detail);
+      if(!detail){
+        printf(isloop?"1\n":"0\n");
+      }
     }
   }
 
   if(bm0)free(bm0);
   return EXIT_SUCCESS;
+}
+char *bm2str(Bm *bm){
+  char *str=malloc(1024);
+  str[0]='\0';
+  if(bm){
+    int xs=bm->xs;
+    int ys=bm->ys;
+    if(xs!=0){
+      for(int x=0;x<xs;x++){
+        sprintf(str,"%s(",str);
+        sprintf(str,"%s%d",str,bm->m[x*ys]);
+        for(int y=1;y<ys;y++){
+          sprintf(str,"%s,%d",str,bm->m[x*ys+y]);
+        }
+        sprintf(str,"%s)",str);
+      }
+    }
+    for(int b=0;b<bm->bs;b++){
+      sprintf(str,"%s[%d]",str,bm->b[b]);
+    }
+  }
+  return str;
 }
 void printbm(Bm *bm){
   if(bm){
@@ -531,7 +583,6 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
     ret = 0;
   }
   if(detail){
-    printf("version : %s\n",version_string[ver]);
     printf("original: ");printbm(b);printf("\n");
     printf("bad part: ");printbm(bpeb);printf("\n");
     printf("offset  : ");printbm(obpeb);printf("\n");
@@ -556,15 +607,15 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
   return ret;
 }
 static void printhelp(void){
-  printf("usage  : bms [-e] [-d] [-c] [-v ver] <bm> # expands bm.\n"
+  printf("usage  : bms [-e] [-d] [-r] [-v ver] <bm> # expands bm.\n"
          "       : bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
-         "       : bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
+         "       : bms  -l  [-d] [-r] [-v ver] <bm> # check bm has loop in a next expand.\n"
          "       : bms  -h                          # shows help.\n"
          "\n"
          "example: bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)\n"
          "\n"
-         "example: bms -c \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2][1]\"\n"
+         "example: bms -r \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2][1]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)[1]\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(3,3,1)\n"
          "\n"
@@ -573,8 +624,47 @@ static void printhelp(void){
          "options:\n"
          " -v ver : expand with version ver.\n"
          "          ver = {4, 2, 1.1} (default = 4)\n"
-         " -c     : continue to expand multi-brackets\n"
+         " -r     : continue to expand multi-brackets\n"
          " -d     : show detail output\n"
          "\n"
          "notes  : activate function is f(x)=x.\n");
 }
+
+int checklooprec(Bm *bm0, Bm *bm1, int depth, char *str, eBMS_VER ver, int detail){
+  if(depth == 0) return 0;
+  int ret=0;
+
+  /* [0]^1--9 */
+  Bm *bm2=clone(bm1);
+  for(int i=1;i<=9;i++){
+    bm2->xs=bm1->xs-1;
+    if(compmat(bm2,bm0)<=0) continue;
+    char *str2=malloc(strlen(str)+6);
+    sprintf(str2, "%s[0]^%d",str,i);
+    if(detail)printf("%s\n", str2);
+    ret=checkloop(bm2, ver, detail);
+    if(ret)return ret;
+    checklooprec(bm0, bm2, depth-1, str2, ver, detail);
+  }
+  /* [n] */
+  for(int k=1;k<=2;k++){
+    Bm *bm11=clone(bm1);
+    bm11->bs=1;
+    bm11->b[0]=1;
+    bm2=expand(bm11,ver,0);
+    if(compmat(bm2, bm0)<=0) continue;
+    char *str2=malloc(strlen(str)+4);
+    sprintf(str2, "%s[1]",str);
+    if(detail)printf("%s\n", str2);
+    ret=checkloop(bm2, ver, detail);
+    if(ret)return ret;
+    checklooprec(bm0, bm2, depth-1, str2, ver, detail);
+  }
+}
+ 
+/* 0: cut 1
+ * 1: 0^1
+ * 9: 0^9
+ * 10: 1
+ * 11: 2
+ * */
