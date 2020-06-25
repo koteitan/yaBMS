@@ -356,7 +356,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
       for(x=1;x<bpxs;x++){
         for(y=0;y<nzs;y++){
           int p=pim[(r+x)*ys+y];
-          if(p==-1){
+          if(p<r){
             *wp++=0;
           }else{
             *wp++ = am[(p-r)*nzs+y];
@@ -742,6 +742,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
 int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, eBMS_VER ver, int detail){
   if(detail){
     printf("%s = ", str2);
+    bm2->bs=0;
     printbm(bm2);
   }
   if(compmat(bm2,bm0)<=0){
@@ -750,7 +751,9 @@ int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, e
   }
   int ret=checkloop(bm2, ver, 0);
   if(detail)printf(" %d\n",ret);
-  if(ret)return ret;
+  if(ret){
+    return ret;
+  }
   ret=checklooprec(bm0, bm2, depth-1, lastcommand, str2, ver, detail);
   return ret;
 }
