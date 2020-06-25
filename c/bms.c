@@ -88,17 +88,21 @@ int main(int argc, char **argv){
   /* check loop */
   if(flagloop){
     if(flagrec){
-      if(argc!=optind+2){
+      if(argc!=optind+2&&argc!=optind+3){
         printf("error: input is not enough.\n");
         printf("usage: ./bms -lr bms0 bms1\n");
         return EXIT_FAILURE;
       }
       Bm *bm1=parse(argv[optind+1]);
+      int depth=3;
+      if(argc==optind+3){
+        depth=atoi(argv[optind+2]);
+      }
       char *str=bm2str(bm1);
-      int ret=checklooprec(bm0, bm1, 3, str, ver, detail);
+      int ret=checklooprec(bm0, bm1, depth, str, ver, detail);
       if(str)free(str);
       if(detail){
-        printf("%s",ret?"loop!\n":"No loops found.\n");
+        printf("%s",ret?"loop!\n":"No loops were found.\n");
       }else{
         printf("%s",ret?"1":"0");
       }
@@ -609,7 +613,9 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
 static void printhelp(void){
   printf("usage  : bms [-e] [-d] [-r] [-v ver] <bm> # expands bm.\n"
          "       : bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
-         "       : bms  -l  [-d] [-r] [-v ver] <bm> # check bm has loop in a next expand.\n"
+         "       : bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
+         "       : bms  -l  [-d] [-r] [-v ver] <bm0> <bm1> [<depth>] \n"
+         "         # search loop from bm1 until bm0 in <depth> times-expansion.\n"
          "       : bms  -h                          # shows help.\n"
          "\n"
          "example: bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
@@ -629,42 +635,87 @@ static void printhelp(void){
          "\n"
          "notes  : activate function is f(x)=x.\n");
 }
-
+int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, eBMS_VER, int detail);
 int checklooprec(Bm *bm0, Bm *bm1, int depth, char *str, eBMS_VER ver, int detail){
   if(depth == 0) return 0;
   int ret=0;
 
-  /* [0]^1--9 */
+  /* simple cut [0]^1--9 */
   Bm *bm2=clone(bm1);
   for(int i=1;i<=9;i++){
-    bm2->xs=bm1->xs-1;
-    if(compmat(bm2,bm0)<=0) continue;
+    bm2->xs=bm1->xs-i;
     char *str2=malloc(strlen(str)+6);
     sprintf(str2, "%s[0]^%d",str,i);
-    if(detail)printf("%s\n", str2);
-    ret=checkloop(bm2, ver, detail);
-    if(ret)return ret;
-    checklooprec(bm0, bm2, depth-1, str2, ver, detail);
+    ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
+    if(str2)free(str2);
+    if(ret){
+      if(bm2)free(bm2);
+      return ret;
+    }
   }
-  /* [n] */
+  if(bm2)free(bm2);
+
+  /* reduce in same length */
+  bm2=clone(bm1);
+  int xs=bm2->xs;
+  int ys=bm2->ys;
+  int amount=0;
+  int isfound=0;
+  do{
+    int *p=&bm2->m[xs*ys-1];
+    isfound=0;
+    for(int i=0;i<ys;i++){
+      if(*p!=0){
+        (*p)--;
+        isfound=1;
+        break;
+      }else{
+        p--;
+      }
+    }
+    if(isfound){
+      amount++;
+      char *str2=malloc(strlen(str)+6);
+      sprintf(str2, "%s<-%d>",str,amount);
+      ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
+      if(str2)free(str2);
+      if(ret){
+        if(bm2)free(bm2);
+        return ret;
+      }
+    }
+  }while(isfound);
+  if(bm2)free(bm2);
+
+  /* expand by [n] */
   for(int k=1;k<=2;k++){
     Bm *bm11=clone(bm1);
     bm11->bs=1;
     bm11->b[0]=1;
     bm2=expand(bm11,ver,0);
-    if(compmat(bm2, bm0)<=0) continue;
     char *str2=malloc(strlen(str)+4);
     sprintf(str2, "%s[1]",str);
-    if(detail)printf("%s\n", str2);
-    ret=checkloop(bm2, ver, detail);
+    ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
+    if(str2)free(str2);
+    if(bm2)free(bm2);
+    if(bm11)free(bm11);
     if(ret)return ret;
-    checklooprec(bm0, bm2, depth-1, str2, ver, detail);
   }
+  return 0;
 }
- 
-/* 0: cut 1
- * 1: 0^1
- * 9: 0^9
- * 10: 1
- * 11: 2
- * */
+
+int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, eBMS_VER ver, int detail){
+  if(detail){
+    printbm(bm2);
+    printf(" = %s", str2);
+  }
+  if(compmat(bm2,bm0)<=0){
+    if(detail)printf(" <\n");
+    return 0;
+  }
+  int ret=checkloop(bm2, ver, 0);
+  if(detail)printf(" %d\n",ret);
+  if(ret)return ret;
+  ret=checklooprec(bm0, bm2, depth-1, str2, ver, detail);
+  return ret;
+}
