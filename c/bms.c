@@ -46,6 +46,11 @@ int main(int argc, char **argv){
           strcmp(optarg,"1.1"  )==0 ||
           0){
           ver = eBMS_VER_1d1;
+        }else if(
+          strcmp(optarg,"BM3.3")==0 ||
+          strcmp(optarg,"3.3"  )==0 ||
+          0){
+          ver = eBMS_VER_3d3;
         }
       break;
       default:
@@ -337,33 +342,58 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
   }
 
   /* make ascension matrix */ 
-  int *am=malloc(sizeof(int)*bpxs*lnz); /* am[x*lnz+y]=0:not ascend/1:ascend */
-  memset(am,0,sizeof(int)*bpxs*lnz);
+  int nzs=lnz+1;
+  int *am=malloc(sizeof(int)*bpxs*nzs); /* am[x*lnz+y]=0:not ascend/1:ascend */
+  memset(am,0,sizeof(int)*bpxs*nzs);
   wp=am;
   switch(ver){
     case eBMS_VER_1d1:
-      for(int n=0;n<bpxs*lnz;n++)*wp++=1;
+      for(int n=0;n<bpxs*nzs;n++)*wp++=1;
     break;
     case eBMS_VER_4:
-      for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
+      for(y=0;y<nzs;y++) *wp++=1; /* all bad root elements are ascent */
       for(x=1;x<bpxs;x++){
-        rp=&pim[(r+x)*ys];
-        for(y=0;y<lnz;y++){
-          if(*rp==-1){
+        for(y=0;y<nzs;y++){
+          int p=pim[(r+x)*ys+y];
+          if(p==-1){
             *wp++=0;
           }else{
-            *wp++ = am[(*rp-r)*lnz+y];
+            *wp++ = am[(p-r)*nzs+y];
           }
-          rp++;
         }
       }
     break;
     case eBMS_VER_2:
-      for(y=0;y<lnz;y++) *wp++=1; /* all bad root elements are ascent */
+      for(y=0;y<nzs;y++) *wp++=1; /* all bad root elements are ascent */
       for(x=1;x<bpxs;x++){
-        for(y=0;y<lnz;y++){
+        for(y=0;y<nzs;y++){
           int pi = pim[(r+x)*ys+0]; /* BM2 always see first row(0) */
-          *wp++ = pi>=0 && am[(pi-r)*lnz+y] && m[(r+x)*ys+y]>m[r*ys+y];
+          *wp++ = pi>=0 && am[(pi-r)*nzs+y] && m[(r+x)*ys+y]>m[r*ys+y];
+        }
+      }
+    break;
+    case eBMS_VER_3d3:
+      am[lnz]=1; /* BR in LNZ */
+      /* propagate 1 to decendants of LNZ in BR */
+      for(x=0;x<bpxs;x++){
+        int p=pim[(x+r)*ys+lnz];
+        if(am[(p-r)*nzs+lnz]) am[x*nzs+lnz]=1;
+      }
+      /* propagate 1 to upper rows */
+      for(x=0;x<bpxs;x++){
+        for(y=0;y<nzs-1;y++){
+          am[x*nzs+y]=am[x*nzs+lnz];
+        }
+      }
+      for(x=1;x<bpxs;x++){
+        for(y=0;y<nzs;y++){
+          if(am[x*nzs+y]==0){
+            int p=pim[(x+r)*ys+y];
+            if(p>r &&  /* The parent is righter than BR */
+               am[(p-r)*nzs+y]==1){ /* The parent is ascent */
+              am[x*nzs+y]=1;
+            }
+          }
         }
       }
     break;
@@ -384,6 +414,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
       for(y=0;y<lnz;y++){
         *wp++=*rp++ + (*rpam++)*(*pd++);
       }
+      rpam++; /* skip lnz */
       for(y=lnz;y<ys;y++){
         *wp++=*rp++;
       }
@@ -425,9 +456,8 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
     for(y=1;y<lnz;y++)printf(",%d",delta[y]);
     printf(")\nAsension Matrix     =");
     for(x=0;x<bpxs;x++){
-      printf("(%d",am[x*lnz]);
-      for(y=1;y<lnz;y++) printf(",%d",am[x*lnz+y]);
-      for(y=lnz;y<ys;y++) printf(",0");
+      printf("(%d",am[x*nzs]);
+      for(y=1;y<nzs;y++) printf(",%d",am[x*nzs+y]);
       printf(")");
     }
     printf("\n\n");

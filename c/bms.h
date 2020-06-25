@@ -10,11 +10,12 @@ typedef struct{
   int b[BMS_BRACKETS_MAX]; /** brackets */
 }Bm;/* Bashicu Matrix (BM) with bracket */
 
-#define VERSIONS (3)
+#define VERSIONS (4)
 typedef enum{
   eBMS_VER_4=0, /* BM4 */
   eBMS_VER_2=1, /* BM2 */
   eBMS_VER_1d1=2, /* BM1.1 */
+  eBMS_VER_3d3=3, /* BM3.3 */
 }eBMS_VER;
 
 const char version_string[VERSIONS][16]={
