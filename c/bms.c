@@ -751,8 +751,9 @@ int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, e
     return 0;
   }
   int ret=checkloop(bm2,ver,0);
+  if(detail)printf(" %d\n",ret);
   if(ret){
-    if(detail)printf(" %d\n",ret);
+    checkloop(bm2,ver,1);
     return ret;
   }
   ret=checklooprec(bm0, bm2, depth-1, lastcommand, str2, ver, detail);
