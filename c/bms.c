@@ -672,7 +672,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
   int ret=0;
 
   /* simple cut [0]^1--9 */
-  if(lastcommand==0){
+  if(lastcommand!=1){
     Bm *bm2=clone(bm1);
     for(int i=1;i<=9;i++){
       bm2->xs=bm1->xs-i;
@@ -689,7 +689,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
   }
 
   /* reduce in same length */
-  if(lastcommand==0){
+  if(lastcommand!=2){
     Bm *bm2=clone(bm1);
     int xs=bm2->xs;
     int ys=bm2->ys;
@@ -741,8 +741,8 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
 
 int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, eBMS_VER ver, int detail){
   if(detail){
+    printf("%s = ", str2);
     printbm(bm2);
-    printf(" = %s", str2);
   }
   if(compmat(bm2,bm0)<=0){
     if(detail)printf(" <\n");
