@@ -58,7 +58,7 @@ int main(int argc, char **argv){
     }
   }
   if(argc<optind+1){
-    printf("error: input is not enough.\n");
+    printf("error: input is not enough. Plase see ./bms --help\n");
     return EXIT_FAILURE;
   }
   if(!flagloop&&!flagexp&&!flagstd)flagexp=1;
@@ -619,6 +619,7 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
     ret = 0;
   }
   if(detail){
+    printf("version : %s\n",version_string[ver]);
     printf("original: ");printbm(b);printf("\n");
     printf("bad part: ");printbm(bpeb);printf("\n");
     printf("offset  : ");printbm(obpeb);printf("\n");
@@ -643,19 +644,22 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
   return ret;
 }
 static void printhelp(void){
-  printf("usage  : bms [-e] [-d] [-r] [-v ver] <bm> # expands bm.\n"
-         "       : bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
-         "       : bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
-         "       : bms  -l  [-d] [-r] [-v ver] <bm0> <bm1> [<depth>] \n"
+  printf("usage  : ./bms [-e] [-d] [-r] [-v ver] <bm> # expands bm.\n"
+         "       : ./bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
+         "       : ./bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
+         "       : ./bms  -l  [-d] [-r] [-v ver] <bm0> <bm1> [<depth>] \n"
          "         # search loop from bm1 until bm0 in <depth> times-expansion.\n"
-         "       : bms  -h                          # shows help.\n"
+         "       : ./bms  -h                          # shows help.\n"
          "\n"
-         "example: bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
+         "example: ./bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)\n"
          "\n"
-         "example: bms -r \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2][1]\"\n"
+         "example: ./bms -r \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2][1]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)[1]\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(3,3,1)\n"
+         "\n"
+
+         "example: ./bms -lrdv 1.1 \"(0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,1,1)(4,0,0)\" \"(0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)(5,1,1)\" 3\n"
          "\n"
          "param  : bm  = bashicu matrix with bracket to expand\n"
          "\n"
