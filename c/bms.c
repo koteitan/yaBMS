@@ -609,7 +609,8 @@ int checkloop(Bm *b, eBMS_VER ver, int detail){
   for(int y=0;y<ys;y++){
     int offset=bpeb->m[y];
     for(int x=0;x<bpeb->xs;x++){
-      if(bpeb->m[x*ys+y]-offset>=0) obpeb->m[x*ys+y]-=offset;
+      obpeb->m[x*ys+y]-=offset;
+      if(obpeb->m[x*ys+y]<0)obpeb->m[x*ys+y]=0;
     }
   }
   if(compmat(obpeb,b)>0){
@@ -749,9 +750,9 @@ int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, e
     if(detail)printf(" <\n");
     return 0;
   }
-  int ret=checkloop(bm2, ver, 0);
-  if(detail)printf(" %d\n",ret);
+  int ret=checkloop(bm2,ver,0);
   if(ret){
+    if(detail)printf(" %d\n",ret);
     return ret;
   }
   ret=checklooprec(bm0, bm2, depth-1, lastcommand, str2, ver, detail);
