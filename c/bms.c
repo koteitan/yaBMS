@@ -103,8 +103,9 @@ int main(int argc, char **argv){
       if(argc==optind+3){
         depth=atoi(argv[optind+2]);
       }
+      if(detail)printf("version : %s\n",version_string[ver]);
       char *str=bm2str(bm1);
-      int ret=checklooprec(bm0, bm1, depth, str, ver, detail);
+      int ret=checklooprec(bm0, bm1, depth, 0, str, ver, detail);
       if(str)free(str);
       if(detail){
         printf("%s",ret?"loop!\n":"No loops were found.\n");
@@ -665,67 +666,71 @@ static void printhelp(void){
          "\n"
          "notes  : activate function is f(x)=x.\n");
 }
-int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, eBMS_VER, int detail);
-int checklooprec(Bm *bm0, Bm *bm1, int depth, char *str, eBMS_VER ver, int detail){
+int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, eBMS_VER, int detail);
+int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_VER ver, int detail){
   if(depth == 0) return 0;
   int ret=0;
 
   /* simple cut [0]^1--9 */
-  Bm *bm2=clone(bm1);
-  for(int i=1;i<=9;i++){
-    bm2->xs=bm1->xs-i;
-    char *str2=malloc(strlen(str)+6);
-    sprintf(str2, "%s[0]^%d",str,i);
-    ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
-    if(str2)free(str2);
-    if(ret){
-      if(bm2)free(bm2);
-      return ret;
-    }
-  }
-  if(bm2)free(bm2);
-
-  /* reduce in same length */
-  bm2=clone(bm1);
-  int xs=bm2->xs;
-  int ys=bm2->ys;
-  int amount=0;
-  int isfound=0;
-  do{
-    int *p=&bm2->m[xs*ys-1];
-    isfound=0;
-    for(int i=0;i<ys;i++){
-      if(*p!=0){
-        (*p)--;
-        isfound=1;
-        break;
-      }else{
-        p--;
-      }
-    }
-    if(isfound){
-      amount++;
+  if(lastcommand==0){
+    Bm *bm2=clone(bm1);
+    for(int i=1;i<=9;i++){
+      bm2->xs=bm1->xs-i;
       char *str2=malloc(strlen(str)+6);
-      sprintf(str2, "%s<-%d>",str,amount);
-      ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
+      sprintf(str2, "%s[0]^%d",str,i);
+      ret=checklooprec_sub(bm0, bm2, str2, depth, 1, ver, detail);
       if(str2)free(str2);
       if(ret){
         if(bm2)free(bm2);
         return ret;
       }
     }
-  }while(isfound);
-  if(bm2)free(bm2);
+    if(bm2)free(bm2);
+  }
+
+  /* reduce in same length */
+  if(lastcommand==0){
+    Bm *bm2=clone(bm1);
+    int xs=bm2->xs;
+    int ys=bm2->ys;
+    int amount=0;
+    int isfound=0;
+    do{
+      int *p=&bm2->m[xs*ys-1];
+      isfound=0;
+      for(int i=0;i<ys;i++){
+        if(*p!=0){
+          (*p)--;
+          isfound=1;
+          break;
+        }else{
+          p--;
+        }
+      }
+      if(isfound){
+        amount++;
+        char *str2=malloc(strlen(str)+6);
+        sprintf(str2, "%s<-%d>",str,amount);
+        ret=checklooprec_sub(bm0, bm2, str2, depth, 2, ver, detail);
+        if(str2)free(str2);
+        if(ret){
+          if(bm2)free(bm2);
+          return ret;
+        }
+      }
+    }while(isfound);
+    if(bm2)free(bm2);
+  }
 
   /* expand by [n] */
   for(int k=1;k<=2;k++){
     Bm *bm11=clone(bm1);
     bm11->bs=1;
     bm11->b[0]=1;
-    bm2=expand(bm11,ver,0);
+    Bm *bm2=expand(bm11,ver,0);
     char *str2=malloc(strlen(str)+4);
     sprintf(str2, "%s[1]",str);
-    ret=checklooprec_sub(bm0, bm2, str2, depth, ver, detail);
+    ret=checklooprec_sub(bm0, bm2, str2, depth, 3, ver, detail);
     if(str2)free(str2);
     if(bm2)free(bm2);
     if(bm11)free(bm11);
@@ -734,7 +739,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, char *str, eBMS_VER ver, int detai
   return 0;
 }
 
-int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, eBMS_VER ver, int detail){
+int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, eBMS_VER ver, int detail){
   if(detail){
     printbm(bm2);
     printf(" = %s", str2);
@@ -746,6 +751,6 @@ int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, eBMS_VER ver, int 
   int ret=checkloop(bm2, ver, 0);
   if(detail)printf(" %d\n",ret);
   if(ret)return ret;
-  ret=checklooprec(bm0, bm2, depth-1, str2, ver, detail);
+  ret=checklooprec(bm0, bm2, depth-1, lastcommand, str2, ver, detail);
   return ret;
 }

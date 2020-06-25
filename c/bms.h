@@ -21,7 +21,8 @@ typedef enum{
 const char version_string[VERSIONS][16]={
   "BM4",
   "BM2",
-  "BM1.1"
+  "BM1.1",
+  "BM3.3"
 };
 
 /** @fn Bm* initbm(void)
@@ -64,4 +65,4 @@ int compmat(Bm* a, Bm* b);
  *          0: if b is not standard. */
 int isstd(Bm *b, eBMS_VER ver, int detail);
 int checkloop(Bm *b, eBMS_VER ver, int detail);
-int checklooprec(Bm *b0, Bm *b1, int depth, char *str, eBMS_VER ver, int detail);
+int checklooprec(Bm *b0, Bm *b1, int depth, int lastcommand, char *str, eBMS_VER ver, int detail);
