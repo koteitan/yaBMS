@@ -1,17 +1,16 @@
 #!/bin/bash
-for i in {6..50}; do
-  echo depth=$i 
-  echo depth=$i >bm1.1_depth$i.txt
-  echo depth=$i >bm2.0_depth$i.txt
-  echo depth=$i >bm3.3_depth$i.txt
-  echo depth=$i >bm4.0_depth$i.txt
-  time ./bms -lrv 1.1 "(0,0,0)(1,1,1)(2,1,0)" "(0,0,0)(1,1,1)(2,1,0)(1,1,1)" $i >>bm1.1_depth$i.txt
-  time ./bms -lrv 2   "(0,0,0)(1,1,1)(2,1,0)" "(0,0,0)(1,1,1)(2,1,0)(1,1,1)" $i >>bm2.0_depth$i.txt
-  time ./bms -lrv 3.3 "(0,0,0)(1,1,1)(2,1,0)" "(0,0,0)(1,1,1)(2,1,0)(1,1,1)" $i >>bm3.3_depth$i.txt
-  time ./bms -lrv 4   "(0,0,0)(1,1,1)(2,1,0)" "(0,0,0)(1,1,1)(2,1,0)(1,1,1)" $i >>bma.04_depth$i.txt
-  echo "">>bm1.1_depth$i.txt
-  echo "">>bm2.0_depth$i.txt
-  echo "">>bm3.3_depth$i.txt
-  echo "">>bm4.0_depth$i.txt
+VERSIONS="1.1 2.0 3.3 4.0"
+M0="(0,0,0)(1,1,1)(2,1,0)"
+M1="(0,0,0)(1,1,1)(2,1,0)(1,1,1)"
+Mn=1
+mkdir -p $Mn
+for d in {6..50}; do
+  echo $0
+  echo depth=$d
+  for v in $VERSIONS; do
+    echo depth=$d >$Mn/bm${v}_depth$d.txt
+    time ./bms -lrv 1.1 $M0 $M1 $d >>$Mn/bm${v}_depth$d.txt
+    echo "">>$Mn/bm${v}_depth$d.txt
+  done
 done
 
