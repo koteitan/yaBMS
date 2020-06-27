@@ -378,7 +378,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
       /* propagate 1 to decendants of LNZ in BR */
       for(x=0;x<bpxs;x++){
         int p=pim[(x+r)*ys+lnz];
-        if(am[(p-r)*nzs+lnz]) am[x*nzs+lnz]=1;
+        if(p!=-1 && am[(p-r)*nzs+lnz]) am[x*nzs+lnz]=1;
       }
       /* propagate 1 to upper rows */
       for(x=0;x<bpxs;x++){
