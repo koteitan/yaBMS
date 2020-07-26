@@ -5,6 +5,7 @@
 #include <getopt.h>
 #include "bms.h"
 static void printhelp(void);
+static void printcopyright(void);
 int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
   int flagstd=0;
@@ -18,6 +19,9 @@ int main(int argc, char **argv){
     switch(arg){
       case 'h':
         printhelp();
+        return EXIT_SUCCESS;
+      case 'c':
+        printcopyright();
         return EXIT_SUCCESS;
       case 'd': detail   = 1; break;
       case 'l': flagloop = 1; break;
@@ -682,6 +686,7 @@ static void printhelp(void){
          "       : ./bms  -l  [-d] [-r] [-v ver] <bm0> <bm1> [<depth>] \n"
          "         # search loop from bm1 until bm0 in <depth> times-expansion.\n"
          "       : ./bms  -h                          # shows help.\n"
+         "       : ./bms  -h                          # shows copyrights.\n"
          "\n"
          "example: ./bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)\n"
@@ -794,4 +799,29 @@ int checklooprec_sub(Bm *bm0, Bm *bm2, char* str2, int depth, int lastcommand, e
   }
   ret=checklooprec(bm0, bm2, depth-1, lastcommand, str2, ver, detail);
   return ret;
+}
+void printcopyright(void){
+  printf( "MIT License\n"
+    "\n"
+    "Copyright (c) 2020 koteitan\n"
+    "\n"
+    "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n"
+    "\n"
+    "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n"
+    "\n"
+    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+    "\n"
+    "Bashicu Matrix System is named by Bashicu in 2014.\n"
+    "  https://googology.wikia.org/ja/wiki/%%E3%%83%%A6%%E3%%83%%BC%%E3%%82%%B6%%E3%%83%%BC%%E3%%83%%96%%E3%%83%%AD%%E3%%82%%B0:BashicuHyudora/BASIC%%E8%%A8%%80%%E8%%AA%%9E%%E3%%81%%AB%%E3%%82%%88%%E3%%82%%8B%%E5%%B7%%A8%%E5%%A4%%A7%%E6%%95%%B0%%E3%%81%%AE%%E3%%81%%BE%%E3%%81%%A8%%E3%%82%%81\n"
+    "Dimensional BMS is named by Ecl1psed#7156. in 2019.\n"
+    "  https://discord.com/channels/206932820206157824/437684636320137226/622205806766587904\n"
+    "\n"
+    "The rule BM1.1 is made by Bashicu in 2016.\n"
+    "The rule BM2   is made by Bashicu in 2016.\n"
+    "The rule BM2.3 is made by koteitan, Nish and Ecl1psed in 2018.\n"
+    "The rule BM4   is made by Bashicu in 2018.\n"
+    "The rule BM3.3 is made by Ecl1psed and rpakr 2019.\n"
+    "The rule of Dimensinal BMS is made by Ecl1psed 2019.\n"
+    "See the details of the rules here:\n"
+    "  https://googology.wikia.org/wiki/User_blog:Koteitan/Categorizing_of_the_rule_sets_for_all_sub_versions_of_bashicu_matrix\n");
 }
