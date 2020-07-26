@@ -32,25 +32,41 @@ int main(int argc, char **argv){
           strcmp(optarg,"BM4")  ==0 ||
           strcmp(optarg,"BM4.0")==0 ||
           strcmp(optarg,"BM2.3")==0 ||
+          strcmp(optarg,"BMS4")  ==0 ||
+          strcmp(optarg,"BMS4.0")==0 ||
+          strcmp(optarg,"BMS2.3")==0 ||
           0){
           ver = eBMS_VER_4;
         }else if(
           strcmp(optarg,"BM2"  )==0 ||
           strcmp(optarg,"BM2.0")==0 ||
+          strcmp(optarg,"BMS2"  )==0 ||
+          strcmp(optarg,"BMS2.0")==0 ||
           strcmp(optarg,"2"  )==0 ||
           strcmp(optarg,"2.0")==0 ||
           0){
           ver = eBMS_VER_2;
         }else if(
           strcmp(optarg,"BM1.1")==0 ||
+          strcmp(optarg,"BMS1.1")==0 ||
           strcmp(optarg,"1.1"  )==0 ||
           0){
           ver = eBMS_VER_1d1;
         }else if(
           strcmp(optarg,"BM3.3")==0 ||
+          strcmp(optarg,"BMS3.3")==0 ||
           strcmp(optarg,"3.3"  )==0 ||
           0){
           ver = eBMS_VER_3d3;
+        }else if(
+          strcmp(optarg,"DBM")==0 ||
+          strcmp(optarg,"DBMS")==0 ||
+          strcmp(optarg,"DBM4")==0 ||
+          strcmp(optarg,"DBMS4")==0 ||
+          strcmp(optarg,"DBM4.0")==0 ||
+          strcmp(optarg,"DBMS4.0")==0 ||
+          0){
+          ver = eBMS_VER_DBM;
         }
       break;
       default:
@@ -352,6 +368,7 @@ Bm* expand(Bm* bm0, eBMS_VER ver, int detail){
       for(int n=0;n<bpxs*nzs;n++)*wp++=1;
     break;
     case eBMS_VER_4:
+    case eBMS_VER_DBM:
       for(y=0;y<nzs;y++) *wp++=1; /* all bad root elements are ascent */
       for(x=1;x<bpxs;x++){
         for(y=0;y<nzs;y++){
@@ -531,17 +548,32 @@ int isstd(Bm *b, eBMS_VER ver, int detail){
   int *wp=s->m;
   for(int x=0;x<s->xs;x++){
     for(int y=0;y<s->ys;y++){
-      if(*rp>x){ /* illegal */
-        return 0;
-      }else if(*rp<x){ /* found */
-        *wp++=*rp+1;
-        memset(wp,0,sizeof(int)*(s->ys-y-1));
-        s->xs=x+1;
-        break;
+      if(ver==eBMS_VER_DBM){
+        /* dimensional BMS ---------------*/
+        if(*rp>x-y && x>=y){ /* illegal */
+          return 0;
+        }else if(*rp<x-y){ /* found */
+          *wp++=*rp+1;
+          memset(wp,0,sizeof(int)*(s->ys-y-1));
+          s->xs=x+1;
+          break;
+        }
+        *wp=x>y?x-y:0;
+        rp++;
+        wp++;
+      }else{ /* normal BMS ---------------*/
+        if(*rp>x){ /* illegal */
+          return 0;
+        }else if(*rp<x){ /* found */
+          *wp++=*rp+1;
+          memset(wp,0,sizeof(int)*(s->ys-y-1));
+          s->xs=x+1;
+          break;
+        }
+        *wp=x;
+        rp++;
+        wp++;
       }
-      *wp=x;
-      rp++;
-      wp++;
     }
   }
 
@@ -665,7 +697,7 @@ static void printhelp(void){
          "\n"
          "options:\n"
          " -v ver : expand with version ver.\n"
-         "          ver = {4, 2, 1.1} (default = 4)\n"
+         "          ver = {4, 3.3, 2, 1.1, DBMS} (default = 4)\n"
          " -r     : continue to expand multi-brackets\n"
          " -d     : show detail output\n"
          "\n"
