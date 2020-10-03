@@ -10,19 +10,17 @@ int main(int argc, char **argv){
   eBMS_VER ver=eBMS_VER_4;
   int flagstd=0;
   int flagloop=0;
+  int flagcmp=0;
   int flagexp=0;
   int flagrec=0;
   int detail=0;
+  int flaghelp=0;
   /* check option */
   char arg;
   while((arg=getopt(argc, argv, "v:hdeslcr")) != -1){
     switch(arg){
-      case 'h':
-        printhelp();
-        return EXIT_SUCCESS;
-      case 'c':
-        printcopyright();
-        return EXIT_SUCCESS;
+      case 'h': flaghelp = 1; break;
+      case 'c': flagcmp  = 1; break;
       case 'd': detail   = 1; break;
       case 'l': flagloop = 1; break;
       case 'e': flagexp  = 1; break;
@@ -77,25 +75,41 @@ int main(int argc, char **argv){
       break;
     }
   }
-  if(argc<optind+1){
-    printf("error: input is not enough. Plase see ./bms --help\n");
-    return EXIT_FAILURE;
+  if(argc==1 || flaghelp){
+    printhelp();
+    if(detail) printcopyright();
+    return EXIT_SUCCESS;
   }
-  if(!flagloop&&!flagexp&&!flagstd)flagexp=1;
-  Bm *bm0=parse(argv[optind]);
+  if(!flagloop&&!flagexp&&!flagstd&&!flagcmp){ /* there is no command in option */
+    flagexp=1; /* recognize expansion command */
+  }
 
   /* check std */
   if(flagstd){
+    if(argc<optind+1){
+      printf("error: input is not enough.\n");
+      printf("usage: ./bms -s bms0\n");
+      return EXIT_FAILURE;
+    }
+    Bm *bm0=parse(argv[optind]);
     int std=isstd(bm0,ver,detail);
     if(detail){
       printf(std?"standard.\n":"non-standard.\n");
     }else{
       printf(std?"1\n":"0\n");
     }
+    if(bm0)free(bm0);
+    return EXIT_SUCCESS;
   }
 
   /* expand */
   if(flagexp){
+    if(argc<optind+1){
+      printf("error: input is not enough.\n");
+      printf("usage: ./bms -e bms0\n");
+      return EXIT_FAILURE;
+    }
+    Bm *bm0=parse(argv[optind]);
     while(bm0->bs>0){
       Bm *bm1=expand(bm0,ver,detail);
       printbm(bm1);
@@ -108,16 +122,48 @@ int main(int argc, char **argv){
       bm0->ys=bm1->ys;
       if(bm1)free(bm1);
     }
+    if(bm0)free(bm0);
+    return EXIT_SUCCESS;
   }
 
+  /* compare */
+  if(flagcmp){
+    if(argc!=optind+2){
+      printf("error: input is not enough.\n");
+      printf("usage: ./bms -c bms0 bms1\n");
+      return EXIT_FAILURE;
+    }
+    Bm *bm0=parse(argv[optind+0]);
+    Bm *bm1=parse(argv[optind+1]);
+    int r=compmat(bm0,bm1);
+    if(detail){
+      printbm(bm0);
+      if(r<0){
+        printf(" < ");
+      }else if(r==0){
+        printf(" == ");
+      }else{
+        printf(" > ");
+      }
+      printbm(bm1);
+      printf("\n");
+    }else{
+      printf("%d\n",r);
+    }
+    if(bm0)free(bm0);
+    if(bm1)free(bm1);
+    return EXIT_SUCCESS;
+  }
   /* check loop */
   if(flagloop){
     if(flagrec){
       if(argc!=optind+2&&argc!=optind+3){
         printf("error: input is not enough.\n");
         printf("usage: ./bms -lr bms0 bms1\n");
+        printf("       ./bms -lr bms0 bms1 [depth]\n");
         return EXIT_FAILURE;
       }
+      Bm *bm0=parse(argv[optind+0]);
       Bm *bm1=parse(argv[optind+1]);
       int depth=3;
       if(argc==optind+3){
@@ -132,8 +178,16 @@ int main(int argc, char **argv){
       }else{
         printf("%s",ret?"1":"0");
       }
+      if(bm0)free(bm0);
       if(bm1)free(bm1);
+      return EXIT_SUCCESS;
     }else{
+      if(argc!=optind+1){
+        printf("error: input is not enough.\n");
+        printf("usage: ./bms -l bms0\n");
+        return EXIT_FAILURE;
+      }
+      Bm *bm0=parse(argv[optind+0]);
       if(detail)printf("version : %s\n",version_string[ver]);
       while(bm0->bs>0){
         if(detail){
@@ -151,11 +205,13 @@ int main(int argc, char **argv){
       if(!detail){
         printf(isloop?"1\n":"0\n");
       }
+      if(bm0)free(bm0);
+      return EXIT_SUCCESS;
     }
   }
-
-  if(bm0)free(bm0);
-  return EXIT_SUCCESS;
+  printf("error: no command.\n");
+  printf("       see help by ./bms -h\n");
+  return EXIT_FAILURE;
 }
 char *bm2str(Bm *bm){
   char *str=malloc(1024);
@@ -684,9 +740,10 @@ static void printhelp(void){
          "       : ./bms  -s  [-d]      [-v ver] <bm> # check bm is standard or not.\n"
          "       : ./bms  -l  [-d]      [-v ver] <bm> # check bm has loop in a next expand.\n"
          "       : ./bms  -l  [-d] [-r] [-v ver] <bm0> <bm1> [<depth>] \n"
+         "       : ./bms  -c                     <bm0> <bm1> # compare the size of them.\n"
          "         # search loop from bm1 until bm0 in <depth> times-expansion.\n"
          "       : ./bms  -h                          # shows help.\n"
-         "       : ./bms  -h                          # shows copyrights.\n"
+         "       : ./bms  -hd                         # shows copyrights.\n"
          "\n"
          "example: ./bms \"(0,0,0)(1,1,1)(2,0,0)(1,1,1)[2]\"\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)\n"
@@ -695,7 +752,6 @@ static void printhelp(void){
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)[1]\n"
          "         (0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(3,3,1)\n"
          "\n"
-
          "example: ./bms -lrdv 1.1 \"(0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,1,1)(4,0,0)\" \"(0,0,0)(1,1,1)(2,0,0)(1,1,0)(2,2,1)(3,0,0)(2,2,0)(3,3,1)(4,0,0)(5,1,1)\" 3\n"
          "\n"
          "param  : bm  = bashicu matrix with bracket to expand\n"

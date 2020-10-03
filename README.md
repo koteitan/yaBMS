@@ -9,6 +9,7 @@ The original bashicu matrix system was implemented in BASIC language. In this re
 - extendable with libraries
 
 - contents
+  - [c/bms](c/): BMS expander/comparator/standard checker/loop finder
   - python/yaBMS.py: python (under construction)
   - js/bms.js: JavaScript library (under construction)
     - [js/index.html](js/): test page
