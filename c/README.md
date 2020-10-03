@@ -1,4 +1,9 @@
 # BMS commander in C
+Download:
+- download with git
+```git clone https://github.com/koteitan/yaBMS.git
+cd c/```
+- [download with zip](https://github.com/koteitan/yaBMS/archive/master.zip)
 
 BMS commander has the following features:
 - BMS expander
