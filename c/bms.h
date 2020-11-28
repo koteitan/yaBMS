@@ -1,6 +1,6 @@
 #pragma once
 
-#define BMS_ELEMS_MAX 4096
+#define BMS_ELEMS_MAX 4096*16
 #define BMS_BRACKETS_MAX 256
 typedef struct{
   int xs; /** number of columns */
@@ -43,6 +43,11 @@ Bm* parse(char *str);
  * @param bm = BM to print */
 void printbm(Bm *bm);
 char *bm2str(Bm *bm);
+
+/** @fn void freebm(Bm *bm)
+ * @brief free BM.
+ * @param bm = BM to free */
+void freebm(Bm *bm);
 
 /** @fn Bm* expand(Bm* bm0, eBMS_VER, int detail)
  * @brief Allocate memory for new BM, expand bm0 into new BM memory, and return its pointer.

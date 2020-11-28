@@ -3,215 +3,59 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <time.h>
 #include "bms.h"
 static void printhelp(void);
 static void printcopyright(void);
+static Bm* getrandprss(void);
 int main(int argc, char **argv){
-  eBMS_VER ver=eBMS_VER_4;
-  int flagstd=0;
-  int flagloop=0;
-  int flagcmp=0;
-  int flagexp=0;
-  int flagrec=0;
-  int detail=0;
-  int flaghelp=0;
-  /* check option */
-  char arg;
-  while((arg=getopt(argc, argv, "v:hdeslcr")) != -1){
-    switch(arg){
-      case 'h': flaghelp = 1; break;
-      case 'c': flagcmp  = 1; break;
-      case 'd': detail   = 1; break;
-      case 'l': flagloop = 1; break;
-      case 'e': flagexp  = 1; break;
-      case 'r': flagrec  = 1; break;
-      case 's': flagstd  = 1; break;
-      case 'v':
-        if(
-          strcmp(optarg,"4")  ==0 ||
-          strcmp(optarg,"4.0")==0 ||
-          strcmp(optarg,"2.3")==0 ||
-          strcmp(optarg,"BM4")  ==0 ||
-          strcmp(optarg,"BM4.0")==0 ||
-          strcmp(optarg,"BM2.3")==0 ||
-          strcmp(optarg,"BMS4")  ==0 ||
-          strcmp(optarg,"BMS4.0")==0 ||
-          strcmp(optarg,"BMS2.3")==0 ||
-          0){
-          ver = eBMS_VER_4;
-        }else if(
-          strcmp(optarg,"BM2"  )==0 ||
-          strcmp(optarg,"BM2.0")==0 ||
-          strcmp(optarg,"BMS2"  )==0 ||
-          strcmp(optarg,"BMS2.0")==0 ||
-          strcmp(optarg,"2"  )==0 ||
-          strcmp(optarg,"2.0")==0 ||
-          0){
-          ver = eBMS_VER_2;
-        }else if(
-          strcmp(optarg,"BM1.1")==0 ||
-          strcmp(optarg,"BMS1.1")==0 ||
-          strcmp(optarg,"1.1"  )==0 ||
-          0){
-          ver = eBMS_VER_1d1;
-        }else if(
-          strcmp(optarg,"BM3.3")==0 ||
-          strcmp(optarg,"BMS3.3")==0 ||
-          strcmp(optarg,"3.3"  )==0 ||
-          0){
-          ver = eBMS_VER_3d3;
-        }else if(
-          strcmp(optarg,"DBM")==0 ||
-          strcmp(optarg,"DBMS")==0 ||
-          strcmp(optarg,"DBM4")==0 ||
-          strcmp(optarg,"DBMS4")==0 ||
-          strcmp(optarg,"DBM4.0")==0 ||
-          strcmp(optarg,"DBMS4.0")==0 ||
-          0){
-          ver = eBMS_VER_DBM;
+  int N=1;
+  if(argc>1)N=atoi(argv[1]);
+  srand((unsigned)time(NULL));
+
+  for(int n=0;n<N;n++){
+    Bm *bm=getrandprss();
+    printbm(bm);
+    printf("\n");
+    freebm(bm);
+  }
+  return EXIT_SUCCESS;
+}
+void freebm(Bm *bm){
+  if(bm){
+    free(bm);
+    bm=NULL;
+  }
+}
+Bm* getrandprss(void){
+  Bm *bm=initbm();
+  bm->m[0]=0;
+  bm->xs=1;
+  bm->ys=1;
+  bm->bs=0;
+  while(1){
+    if(rand()%6==0){
+      return bm;
+    }else{
+      bm->xs++;
+      //find standard
+      int old=bm->xs-2;
+      int new=bm->xs-1;
+
+      int k=bm->m[old]+1;
+      while(1){
+        bm->m[new]=k;
+        int isstd0 = isstd(bm, eBMS_VER_4, 0);
+        if(isstd0){
+          break;
+        }else{
+          k--;
         }
-      break;
-      default:
-      break;
+      }
+      int newval=rand()%(k+1);
+      bm->m[new]=newval;
     }
   }
-  if(argc==1 || flaghelp){
-    printhelp();
-    if(detail) printcopyright();
-    return EXIT_SUCCESS;
-  }
-  if(!flagloop&&!flagexp&&!flagstd&&!flagcmp){ /* there is no command in option */
-    flagexp=1; /* recognize expansion command */
-  }
-
-  /* check std */
-  if(flagstd){
-    if(argc<optind+1){
-      printf("error: input is not enough.\n");
-      printf("usage: ./bms -s bms0\n");
-      return EXIT_FAILURE;
-    }
-    Bm *bm0=parse(argv[optind]);
-    int std=isstd(bm0,ver,detail);
-    if(detail){
-      printf(std?"standard.\n":"non-standard.\n");
-    }else{
-      printf(std?"1\n":"0\n");
-    }
-    if(bm0)free(bm0);
-    return EXIT_SUCCESS;
-  }
-
-  /* expand */
-  if(flagexp){
-    if(argc<optind+1){
-      printf("error: input is not enough.\n");
-      printf("usage: ./bms -e bms0\n");
-      return EXIT_FAILURE;
-    }
-    Bm *bm0=parse(argv[optind]);
-    while(bm0->bs>0){
-      Bm *bm1=expand(bm0,ver,detail);
-      printbm(bm1);
-      printf("\n");
-      if(!flagrec)break;
-      memcpy(&bm0->m[0], &bm1->m[0], sizeof(int)*bm1->xs*bm1->xs);
-      memcpy(&bm0->b[0], &bm1->b[0], sizeof(int)*bm1->bs);
-      bm0->bs=bm1->bs;
-      bm0->xs=bm1->xs;
-      bm0->ys=bm1->ys;
-      if(bm1)free(bm1);
-    }
-    if(bm0)free(bm0);
-    return EXIT_SUCCESS;
-  }
-
-  /* compare */
-  if(flagcmp){
-    if(argc!=optind+2){
-      printf("error: input is not enough.\n");
-      printf("usage: ./bms -c bms0 bms1\n");
-      return EXIT_FAILURE;
-    }
-    Bm *bm0=parse(argv[optind+0]);
-    Bm *bm1=parse(argv[optind+1]);
-    int r=compmat(bm0,bm1);
-    if(detail){
-      printbm(bm0);
-      if(r<0){
-        printf(" < ");
-      }else if(r==0){
-        printf(" == ");
-      }else{
-        printf(" > ");
-      }
-      printbm(bm1);
-      printf("\n");
-    }else{
-      printf("%d\n",r);
-    }
-    if(bm0)free(bm0);
-    if(bm1)free(bm1);
-    return EXIT_SUCCESS;
-  }
-  /* check loop */
-  if(flagloop){
-    if(flagrec){
-      if(argc!=optind+2&&argc!=optind+3){
-        printf("error: input is not enough.\n");
-        printf("usage: ./bms -lr bms0 bms1\n");
-        printf("       ./bms -lr bms0 bms1 [depth]\n");
-        return EXIT_FAILURE;
-      }
-      Bm *bm0=parse(argv[optind+0]);
-      Bm *bm1=parse(argv[optind+1]);
-      int depth=3;
-      if(argc==optind+3){
-        depth=atoi(argv[optind+2]);
-      }
-      if(detail)printf("version : %s\n",version_string[ver]);
-      char *str=bm2str(bm1);
-      int ret=checklooprec(bm0, bm1, depth, 0, str, ver, detail);
-      if(str)free(str);
-      if(detail){
-        printf("%s",ret?"loop!\n":"No loops were found.\n");
-      }else{
-        printf("%s",ret?"1":"0");
-      }
-      if(bm0)free(bm0);
-      if(bm1)free(bm1);
-      return EXIT_SUCCESS;
-    }else{
-      if(argc!=optind+1){
-        printf("error: input is not enough.\n");
-        printf("usage: ./bms -l bms0\n");
-        return EXIT_FAILURE;
-      }
-      Bm *bm0=parse(argv[optind+0]);
-      if(detail)printf("version : %s\n",version_string[ver]);
-      while(bm0->bs>0){
-        if(detail){
-          printf("original: ");printbm(bm0);printf("\n");
-        }
-        Bm *bm1=expand(bm0,ver,0);
-        memcpy(&bm0->m[0], &bm1->m[0], sizeof(int)*bm1->xs*bm1->xs);
-        memcpy(&bm0->b[0], &bm1->b[0], sizeof(int)*bm1->bs);
-        bm0->bs=bm1->bs;
-        bm0->xs=bm1->xs;
-        bm0->ys=bm1->ys;
-        if(bm1)free(bm1);
-      }
-      int isloop=checkloop(bm0,ver,detail);
-      if(!detail){
-        printf(isloop?"1\n":"0\n");
-      }
-      if(bm0)free(bm0);
-      return EXIT_SUCCESS;
-    }
-  }
-  printf("error: no command.\n");
-  printf("       see help by ./bms -h\n");
-  return EXIT_FAILURE;
 }
 char *bm2str(Bm *bm){
   char *str=malloc(1024);
@@ -274,6 +118,7 @@ Bm *parse(char *str){
   int ys = 0;
   int *wp = &bm->m[0];
   char *c;
+  *wp=0;
   //parse matrix
   for(c=&str[0];*c!='['&&*c!='\0';c++){
     switch(*c){
