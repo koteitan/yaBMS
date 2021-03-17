@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html><head><title>tree expansion</title>
+<meta http-equiv="Content-type" content="text/html; charset=sjis">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style><!--
+  body{font-family:Segoe UI}
+  a{color:black;border-style:none;text-decoration:underline}
+  a:link{color:#0000FF;border-style:none;text-decoration:underline}
+  a:visited{color:#0000FF;border-style:none;text-decoration:underline}
+  a:hover{color:#FF00FF;border-color:none;text-decoration:underline}
+  address{text-align:right;font-style:normal}
+  .myinput{border-style:solid;border-color:black;border-width:1px;background-color:white;color:black;font-family:ＭＳ ゴシック;font-size:10pt;padding:2px}
+  .tdbutton{border-width:1px;border-style:solid;border-color:white;height:30px;width:30px}
+  hr{border-style:solid}
+  .console{font-family:MS Gothic;color:white;background-color:black}
+  .node{border-style:solid}
+--></style></head><body>
+<h1>tree expansion</h1>
+<form id=form0>
+  <div id=node0 class="node">
+    <span id=bms0>(0,0,0,0)(1,1,1,1)</span>
+    <div id=node1 class="node">
+      <span id=bms1>(0,0,0)(1,1,1)</span>
+      <input type=button value="expand" onclick="javascript:expandbutton(1);">
+    </div>
+    <div id=node2 class="node">
+      <span id=bms2>(0,0,0)(1,1,1)(2,2,2)</span>
+      <input type=button value="expand" onclick="javascript:expandbutton(2);">
+    </div>
+    <div id=node3 class="node">
+      <span id=bms3>(0,0,0)(1,1,1)(2,2,2)(3,3,3)</span>
+      <input type=button value="expand" onclick="javascript:expandbutton(3);">
+    </div>
+  </div>
+</form>
+</body>
+<script type="text/javascript" src="./bms.js"></script>
+<script type="text/javascript" src="./exarray.js"></script>
+<script type="text/javascript" src="./matrix.js"></script>
+<script type="text/javascript"><!--
+var nodes=4;
+var expandbutton=function(no){
+  var pnode=document.getElementById("node"+no);
+  var pbmsstr=document.getElementById("bms"+no).innerHTML;
+  if(pnode!==null){
+    for(var i=0;i<3;i++){
+      var newid=nodes++;
+      var div=document.createElement('div');
+      div.id="node"+newid;
+      div.class="node";
+      pnode.appendChild(div);
+
+      var span=document.createElement('span');
+      span.id="bms"+newid;
+      var b=new Bms(pbmsstr);
+      b.b=i;
+      span.innerHTML=b.expand().toString().split("[")[0];
+      div.appendChild(span);
+
+      var input=document.createElement('input');
+      input.type="button";
+      input.value="expand";
+      input.onclick="javascript:expandbutton("+newid+");"
+      div.appendChild(input);
+
+    }
+  }else{
+    console.log("You Died");
+  }
+}
+//--></script>
+</html>
+
+
