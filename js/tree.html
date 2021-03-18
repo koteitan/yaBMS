@@ -17,56 +17,60 @@
 --></style></head><body>
 <h1>tree expansion</h1>
 <form id=form0>
-  <div id=node0 class="node">
+  bracket = <input type=text value=3 id=bracket cols=5>
+  <div id=node0 class="node" data-status=closed>
     <span id=bms0>(0,0,0,0)(1,1,1,1)</span>
-    <div id=node1 class="node">
-      <span id=bms1>(0,0,0)(1,1,1)</span>
-      <input type=button value="expand" onclick="javascript:expandbutton(1);">
-    </div>
-    <div id=node2 class="node">
-      <span id=bms2>(0,0,0)(1,1,1)(2,2,2)</span>
-      <input type=button value="expand" onclick="javascript:expandbutton(2);">
-    </div>
-    <div id=node3 class="node">
-      <span id=bms3>(0,0,0)(1,1,1)(2,2,2)(3,3,3)</span>
-      <input type=button value="expand" onclick="javascript:expandbutton(3);">
-    </div>
+    <input id=button0 type=button value=expand onclick="javascript:handleexpandbutton(0);">
   </div>
 </form>
-<address>version 0.1<br><a href="https://github.com/koteitan/yaBMS/blob/master/js/tree.html">https://github.com/koteitan/yaBMS/blob/master/js/tree.html</a></address>
+<address>version 0.2<br><a href="https://github.com/koteitan/yaBMS/blob/master/js/tree.html">https://github.com/koteitan/yaBMS/blob/master/js/tree.html</a></address>
 </body>
 <script type="text/javascript" src="./bms.js"></script>
 <script type="text/javascript" src="./exarray.js"></script>
 <script type="text/javascript" src="./matrix.js"></script>
 <script type="text/javascript"><!--
-var nodes=4;
-var expandbutton=function(no){
-  var pnode=document.getElementById("node"+no);
-  var pbmsstr=document.getElementById("bms"+no).innerHTML;
-  if(pnode!==null){
-    for(var i=0;i<3;i++){
-      var newid=nodes++;
-      var div=document.createElement('div');
-      div.setAttribute("id","node"+newid);
-      div.setAttribute("class","node");
-      pnode.appendChild(div);
+var getelem=function(str){return document.getElementById(str);}
+var gethtml=function(str){return getelem(str).innerHTML;}
+var nodes=4; // number of current nodes
+var handleexpandbutton=function(no){ //handle expand/close button
+  // get information
+  var pnode  =getelem("node"+no);
+  if(pnode.getAttribute("data-status")=="closed"){
+    var bracket=getelem("bracket").value;
+    var pbmsstr=gethtml("bms"+no);
+    if(bracket>=1){
+      // dom change
+      for(var i=0;i<bracket;i++){
+        var newid=nodes++;
+        var div=document.createElement('div');
+        div.setAttribute("id","node"+newid);
+        div.setAttribute("class","node");
+        div.setAttribute("data-status","closed");
+        pnode.appendChild(div);
 
-      var span=document.createElement('span');
-      span.setAttribute("id","bms"+newid);
-      var b=new Bms(pbmsstr);
-      b.b=i;
-      span.innerHTML=b.expand().toString().split("[")[0];
-      div.appendChild(span);
+        var span=document.createElement('span');
+        span.setAttribute("id","bms"+newid);
+        var b=new Bms(pbmsstr);
+        b.b=i;
+        span.innerHTML=b.expand().toString().split("[")[0];
+        div.appendChild(span);
 
-      var input=document.createElement('input');
-      input.setAttribute("type","button");
-      input.setAttribute("value","expand");
-      input.setAttribute("onclick","javascript:expandbutton("+newid+");");
-      div.appendChild(input);
-
+        var input=document.createElement('input');
+        input.setAttribute("type","button");
+        input.setAttribute("value","expand");
+        input.setAttribute("onclick","javascript:handleexpandbutton("+newid+");");
+        input.setAttribute("id","button"+newid);
+        div.appendChild(input);
+      }
+      pnode.setAttribute("data-status","expanded");
+      getelem("button"+no).setAttribute("value","close");
     }
-  }else{
-    console.log("You Died");
+  }else{//data-expanded == true
+    while(pnode.children.length>2){
+      pnode.removeChild(pnode.children[2]);
+    }
+    pnode.setAttribute("data-status","closed");
+    getelem("button"+no).setAttribute("value","expand");
   }
 }
 //--></script>
