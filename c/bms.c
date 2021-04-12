@@ -807,7 +807,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
       }
       if(isfound){
         amount++;
-        char *str2=malloc(strlen(str)+6);
+        char *str2=malloc(strlen(str)+10);
         sprintf(str2, "%s<-%d>",str,amount);
         ret=checklooprec_sub(bm0, bm2, str2, depth, 2, ver, detail);
         if(str2)free(str2);
