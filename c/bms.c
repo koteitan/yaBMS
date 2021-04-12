@@ -821,7 +821,7 @@ int checklooprec(Bm *bm0, Bm *bm1, int depth, int lastcommand, char *str, eBMS_V
   }
 
   /* expand by [n] */
-  for(int k=1;k<=2;k++){
+  for(int k=1;k<=1;k++){
     Bm *bm11=clone(bm1);
     bm11->bs=1;
     bm11->b[0]=k;
