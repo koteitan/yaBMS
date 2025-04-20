@@ -1,20 +1,31 @@
 {
-  "name": "yabms-mcp",
+  "name": "example-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for yaBMS - Yet another implementation of Bashicu Matrix System",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
+  "description": "Example code for Anthropic MCP server.",
+  "main": "./build/index.js",
+  "bin": {
+    "example-mcp-server": "build/index.js"
   },
-  "keywords": [
-    "mcp",
-    "bashicu",
-    "bms"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && chmod 755 build/index.js",
+    "start": "build/index.js"
+  },
+  "files": [
+    "build"
   ],
+  "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^2025.3.28"
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.17",
+    "typescript": "^5.8.2"
+  },
+  "volta": {
+    "node": "20.16.0"
   }
 }
-
