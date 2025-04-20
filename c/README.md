@@ -1,14 +1,17 @@
 # BMS commander in C
 Download:
 - download with git
-```git clone https://github.com/koteitan/yaBMS.git
-cd c/```
+```bash
+git clone https://github.com/koteitan/yaBMS.git
+cd c/
+```
 - [download with zip](https://github.com/koteitan/yaBMS/archive/master.zip)
 
 BMS commander has the following features:
 - BMS expander
   - Expander: Expand a BMS with the given brackets.
-```usage  : ./bms [-e] [-d] [-r] [-v ver] <bm>
+```bash
+usage  : ./bms [-e] [-d] [-r] [-v ver] <bm>
   -v ver : expand with version ver.
      ver = {4, 3.3, 2, 1.1, DBMS} (default = 4)
      ex:
