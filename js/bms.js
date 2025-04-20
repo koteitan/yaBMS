@@ -195,3 +195,8 @@ Bms.prototype.Lng=function(){
 Bms.Lng=function(M){
   return M.xs();
 }
+Bms.str2expand=function(str){
+  var b=Bms.parse(str);
+  return b.expand().toString();
+}
+

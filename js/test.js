@@ -7,9 +7,7 @@ var dothemall=function(){ //button
   str=str.replace(/^\n*/g, "");
   str=str.replace(/\n*$/g, "");
   str=str.replace(/\n+/g, "\n");
-  //parse
-  var bms=Bms.parse(str);
-  //test
-  outtext.value = bms.expand().toString();
+  //expand
+  outtext.value = Bms.str2expand(str);
 };
 
