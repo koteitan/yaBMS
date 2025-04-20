@@ -1,0 +1,20 @@
+{
+  "name": "yabms-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for yaBMS - Yet another implementation of Bashicu Matrix System",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "bashicu",
+    "bms"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^2025.3.28"
+  }
+}
+
