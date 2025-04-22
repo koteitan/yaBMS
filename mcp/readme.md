@@ -16,36 +16,16 @@ Make sure you have the following installed on your system:
       ```
   - Windows:
     - Install Node.js and npm by downloading the installer (.msi) from https://nodejs.org/en/download
-- TypeScript compiler (`tsc`)
-- Required system packages
-
-## Installation
-
-### Linux / WSL
-
-```bash
-cd mcp
-npm install
-npm run build
-```
-
-### Windows
-
-```powershell
-cd mcp
-npm install
-npm run buildwin
-```
 
 ## MCP Clients Settings
 
-Add or update the following entries in your setting.json of the clients to configure the MCP servers:
+Add "yabms" to the "mcpServers" in your configuration file.
 - For **claude**, the configuration file is located at:
   `C:\Users\your-user-name\AppData\Roaming\Claude\claude_desktop_config.json`
 - For **cline** by WSL, the configuration file is located at:
   `/home/your-user-name/.vscode-server/data/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 
-### case of MCP server on WSL
+### With linux/WSL MCP server
 ```json
 {
   "mcpServers": {
@@ -54,27 +34,28 @@ Add or update the following entries in your setting.json of the clients to confi
       "args": [
         "bash",
         "-ic",
-        "node /your/path/to/yaBMS/mcp/build/index.js"
+        "node /your/path/to/yaBMS/mcp/index.js"
       ]
     }
   }
 }
 ```
 
-### case of MCP server on Windows
+### With Windows MCP server
 ```json
 {
   "mcpServers": {
     "yabmswin": {
       "command": "node.exe",
       "args": [
-        "C:\\path\\to\\yaBMS\\mcp\\build\\index.js"
+        "C:\\path\\to\\yaBMS\\mcp\\index.js"
       ]
     }
   }
 }
 ```
-Adjust the path as necessary for your environment.
+
+Please adjust the path as necessary for your environment.
 
 ## MCP Client usage
 Ask your LLM like this:
