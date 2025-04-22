@@ -2,22 +2,33 @@
 
 This document provides instructions for setting up and using the MCP server in this project.
 
-## Prerequisites
+## Requirements
 
-Make sure you have the following installed on your system:
+- MCP Server
+  - Node.js
+  - npm
+  - This project's source code
+- MCP Client
+  - cline [https://cline.dev/](https://cline.dev/)
+  - claude [https://claude.ai/](https://claude.ai/)
 
-- WSL
-- Node.js
-  - linux/WSL
-    - Install Node.js and npm using your package manager, e.g.:
-      ```bash
-      sudo apt update
-      sudo apt install -y nodejs npm
-      npm install
-      ```
-  - Windows:
-    - Install Node.js and npm by downloading the installer (.msi) from https://nodejs.org/en/download
-
+## How to prepare the MCP server
+### Linux/WSL
+- Install Node.js and npm using your package manager.
+  ```bash
+  sudo apt update
+  sudo apt install -y nodejs npm
+  ```
+- Install the required packages.
+  ```bash
+  npm install
+  ```
+### Windows
+  - Install Node.js and npm by downloading the installer (.msi) from https://nodejs.org/en/download
+- Install the required packages.
+  ```cmd
+  npm install
+  ```
 ## MCP Clients Settings
 
 Add "yabms" to the "mcpServers" in your configuration file.
