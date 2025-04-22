@@ -13,6 +13,7 @@ Make sure you have the following installed on your system:
       ```bash
       sudo apt update
       sudo apt install -y nodejs npm
+      npm install
       ```
   - Windows:
     - Install Node.js and npm by downloading the installer (.msi) from https://nodejs.org/en/download
