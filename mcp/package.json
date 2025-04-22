@@ -2,19 +2,18 @@
   "name": "example-mcp-server",
   "version": "1.0.0",
   "description": "Example code for Anthropic MCP server.",
-  "main": "./build/index.js",
+  "main": "./index.js",
   "bin": {
-    "example-mcp-server": "build/index.js"
+    "example-mcp-server": "index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && chmod 755 build/index.js && cp src/bms.cjs build",
-    "buildwin": "tsc && copy src\\bms.cjs build\\bms.cjs",
-    "start": "node build/index.js",
-    "clean": "rm -rf build && rm -rf node_modules && rm -rf package-lock.json"
+    "start": "node index.js",
+    "clean": "rm -rf node_modules && rm -rf package-lock.json"
   },
   "files": [
-    "build"
+    "index.js",
+    "bms.js"
   ],
   "keywords": [],
   "author": "",
