@@ -8,6 +8,7 @@ const {
   ListResourcesRequestSchema,
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
+  ListResourceTemplatesRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
 const { z } = require("zod");
 const fs = require("fs");
@@ -100,13 +101,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   return response;
 });
 
+server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
+  return {
+    resourceTemplates: [
+      {
+        uriTemplate: "bms://doc/{name}.md",
+        name: "Documentation resources",
+        description: "Documentation resources",
+        mimeType: "text/markdown"
+      },
+    ],
+  };
+});
+
 // Handle ListResourcesRequestSchema
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   logSyslog("Received ListResourcesRequestSchema");
   return {
     resources: [
       {
-        uri: "bms://what_is_bms",
+        uri: "bms://doc/what-is-bms.md",
         name: "What is Bashicu Matrix System",
         description: "Explanation of Bashicu Matrix notation and expansion",
         mimeType: "text/markdown"
@@ -119,8 +133,8 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   let response;
   try {
     const uri = request.params.uri;
-if (uri === "bms://what_is_bms") {
-      const filePath = path.join(__dirname, "doc", "index.md");
+if (uri === "bms://doc/what-is-bms.md") {
+      const filePath = path.join(__dirname, "doc", "what-is-bms.md");
       const text = fs.readFileSync(filePath, "utf8");
       response = {
         contents: [
