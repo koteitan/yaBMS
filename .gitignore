@@ -1,0 +1,35 @@
+# Node modules (if any)
+node_modules/
+mcp/package-lock.json
+
+# Logs
+logs/
+
+# Build output
+dist/
+build/
+*.o
+*.so
+*.exe
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# C/C++ specific
+*.out
+*.a
+*.dSYM/
+
+# IDE and editor folders
+.vscode/
+.idea/
+
+# Backup files
+*~
+*.swp

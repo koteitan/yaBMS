@@ -70,5 +70,7 @@ For example,
 
 This expansion process is a core operation in working with Bashicu Matrices and is used to analyze properties of large ordinals.
 
-## Usage
+Bashicu Matrix System (BMS) can be said to be a combination of the Bashicu Matrix Notation and the fundamental sequences for all Bashicu Matrices. 
+
+# Usage
 When you use the `expand_bms` tool, M[n] is the input string, and the output is the expanded form of the Bashicu Matrix. For example, if you input `(0,0)(1,1)[2]`, the output will be `(0,0)(1,0)(2,0)`.
