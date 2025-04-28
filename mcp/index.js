@@ -119,65 +119,15 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   let response;
   try {
     const uri = request.params.uri;
-    if (uri === "bms://what_is_bms") {
+if (uri === "bms://what_is_bms") {
+      const filePath = path.join(__dirname, "doc", "index.md");
+      const text = fs.readFileSync(filePath, "utf8");
       response = {
         contents: [
           {
             uri: uri,
             mimeType: "text/markdown",
-            text: `# Bashicu Matrix System
-
-## What is a Bashicu Matrix?
-
-A Bashicu Matrix is a notation system used to represent large ordinals (transfinite numbers). It consists of a sequence of tuples of natural numbers enclosed in parentheses.
-
-### Examples:
-- (0,0,0)(1,1,1)
-- (0,0)(1,1)(2,1)
-
-## Correspondence with Ordinals
-Bashicu Matrices correspond to ordinals in a specific way. For example,
-- (0) = 1
-- (0)(0) = 2
-- (0)(0)(0) = 3
-- (0)(1) = omega
-- (0)(1)(0) = omega + 1
-- (0)(1)(1) = omega + 2
-- (0)(1)(2) = omega + 3
-- (0)(1)(0)(1) = omega 2
-- (0)(1)(0)(1)(0) = omega 2 + 1
-- (0)(1)(0)(1)(1) = omega 2 + 2
-- (0)(1)(0)(1)(0)(1) = omega 3
-- (0)(1)(1) = omega^2
-- (0)(1)(1)(0) = omega^2 + 1
-- (0)(1)(1)(0)(0) = omega^2 + 2
-- (0)(1)(1)(0)(1) = omega^2 + omega
-- (0)(1)(1)(0)(1)(0) = omega^2 + omega + 1
-- (0)(1)(1)(0)(1)(0)(1) = omega^2 + omega 2
-- (0)(1)(1)(0)(1)(1) = omega^22
-- (0)(1)(1)(1) = omega^3
-- (0)(1)(1)(1)(1) = omega^4
-- (0)(1)(2) = omega^omega
-- (0)(1)(2)(3) = omega^omega^omega
-- (0,0)(1,1) = epsilon_0
-- (0,0)(1,1)(0,0) = epsilon_0 + 1
-- (0,0)(1,1)(1,0) = epsilon_0 omega
-- (0,0)(1,1)(1,1) = epsilon_1
-- (0,0)(1,1)(2,0) = epsilon_omega
-- (0,0)(1,1)(2,1) = zeta_0
-- (0,0)(1,1)(2,2) = psi_0(psi_2(0))
-- (0,0)(1,1)(2,2)(0,0) = psi_0(psi_2(0)) + 1
-- (0,0)(1,1)(2,2)(1,0) = psi_0(psi_2(0)+1)
-- (0,0)(1,1)(2,2)(1,1) = psi_0(psi_2(0)+psi_1(0))
-- (0,0)(1,1)(2,2)(2,0) = psi_0(psi_2(0)+psi_1(psi_2(0)+1))
-- (0,0)(1,1)(2,2)(2,1) = psi_0(psi_2(0)+psi_1(psi_2(0)+psi_1(0)))
-- (0,0)(1,1)(2,2)(2,2) = psi_0(psi_2(0)2)
-- (0,0)(1,1)(2,2)(3,0) = psi_0(psi_2(1)
-- (0,0)(1,1)(2,2)(3,1) = psi_0(psi_2(psi_1(0)))
-- (0,0)(1,1)(2,2)(3,2) = psi_0(psi_2(psi_2(0)))
-- (0,0)(1,1)(2,2)(3,3) = psi_0(psi_3(0))
-- (0,0,0)(1,1,1) = psi_0(psi_omega(0))
-`
+            text: text
           }
         ]
       };
