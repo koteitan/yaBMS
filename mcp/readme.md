@@ -86,8 +86,8 @@ For claude, you can give the resource by 'Connect button':
 
 ![Resource Image](img/claude-connect-button.png)
 
-Then, select the resource 'What is Bashicu Matrix System':
+Next, select the resource 'what is Bashicu Matrix System'.
 
 ![Resource Image](img/claude-select-yabms-resources.png)
 
-After that, LLM will get what is BMS.
+After that, your LLM will get what is BMS.
