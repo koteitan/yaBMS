@@ -19,8 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.9.0",
-    "zod": "^3.24.2"
+    "@modelcontextprotocol/sdk": "^1.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.17",

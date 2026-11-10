@@ -10,7 +10,6 @@ const {
   ReadResourceRequestSchema,
   ListResourceTemplatesRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
-const { z } = require("zod");
 const fs = require("fs");
 const path = require("path");
 
